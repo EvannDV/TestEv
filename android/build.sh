@@ -15,7 +15,7 @@ cp ../web/index.html "$OUT/assets/"
 "$BT/aapt2" compile --dir res -o "$OUT/res.zip"
 "$BT/aapt2" link -o "$OUT/base.apk" -I "$JAR" --manifest AndroidManifest.xml -A "$OUT/assets" \
   --java "$OUT/gen" --min-sdk-version 21 --target-sdk-version 33 \
-  --version-code 3 --version-name 1.2 "$OUT/res.zip"
+  --version-code 4 --version-name 1.3 "$OUT/res.zip"
 javac -nowarn -source 8 -target 8 -cp "$JAR" -d "$OUT/obj" $(find src "$OUT/gen" -name '*.java') 2>&1 | grep -v '^warning\|^Note\|^[0-9]* warning' || true
 "$BT/d8" --lib "$JAR" --min-api 21 --output "$OUT/dex" $(find "$OUT/obj" -name '*.class')
 (cd "$OUT/dex" && zip -q -j ../base.apk classes.dex)
