@@ -1,0 +1,11 @@
+{
+  "VehicleSpeed": "speed",
+  "EngineRPM": "rpm",
+  "CoolantTemp": "coolant",
+  "FuelLevel": "fuel",
+  "BatteryVoltage": "voltage",
+  "ThrottlePosition": "throttle",
+  "IntakeAirTemp": "intake",
+  "EngineLoad": "load",
+  "CurrentGear": "gear"
+}

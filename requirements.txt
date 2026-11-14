@@ -1,0 +1,6 @@
+aiohttp>=3.9
+# --source obd
+obd>=0.7
+# --source can
+python-can>=4.3
+cantools>=39
