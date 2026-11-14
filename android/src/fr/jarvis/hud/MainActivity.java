@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends Activity {
-    private static final String DEMO = "demo", DIAG = "diag";
+    private static final String DEMO = "demo", DIAG = "diag", SNIFF = "sniff";
     private WebView web;
     private TextToSpeech tts;
     private boolean ttsReady;
@@ -98,14 +99,21 @@ public class MainActivity extends Activity {
         } catch (SecurityException ignored) { }
         names.add("Mode démo (sans voiture)");
         addrs.add(DEMO);
-        names.add("Diagnostic de l'écran (accès CAN)");
+        names.add("Écoute CAN de l'autoradio (étape 2)");
+        addrs.add(SNIFF);
+        names.add("Diagnostic de l'écran");
         addrs.add(DIAG);
         new AlertDialog.Builder(this)
-                .setTitle(addrs.size() == 2
+                .setTitle(addrs.size() == 3
                         ? "Aucun appareil Bluetooth appairé. Appaire d'abord le dongle OBD dans les réglages Android."
                         : "Choisis ton dongle OBD (ELM327)")
                 .setItems(names.toArray(new String[0]), (dlg, i) -> {
                     if (DIAG.equals(addrs.get(i))) { showDiag(); return; }
+                    if (SNIFF.equals(addrs.get(i))) {
+                        startActivity(new Intent(this, SniffActivity.class));
+                        if (web.getUrl() == null) use(DEMO);
+                        return;
+                    }
                     prefs.edit().putString("device", addrs.get(i)).apply();
                     use(addrs.get(i));
                 })

@@ -17,5 +17,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".SniffActivity" android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|uiMode|screenLayout|smallestScreenSize|density" />
     </application>
 </manifest>
