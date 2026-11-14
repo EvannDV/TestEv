@@ -50,30 +50,56 @@ public class SniffActivity extends Activity {
     private final Handler sink = new Handler(Looper.getMainLooper(), this::onMessage);
 
     private boolean onMessage(Message m) {
-        {
-            String key = String.format("%04X", m.what & 0xFFFF);
-            String val;
-            if (m.obj instanceof byte[]) {
-                byte[] b = (byte[]) m.obj;
-                if (b.length >= 2) key += String.format(" %02X%02X", b[0], b[1]);
-                StringBuilder h = new StringBuilder();
-                for (int i = 0; i < b.length && i < 20; i++) h.append(String.format("%02X ", b[i]));
-                val = "[" + b.length + "] " + h;
-            } else {
-                val = m.obj == null ? "" : String.valueOf(m.obj);
-                if (val.length() > 40) val = val.substring(0, 40);
-            }
-            val = m.arg1 + " " + m.arg2 + " " + val;
-            Row r = rows.get(key);
-            if (r == null) {
-                if (rows.size() >= 300) return true;
-                rows.put(key, r = new Row());
-            }
-            r.count++;
-            if (!val.equals(r.last)) r.changes++;
-            r.last = val;
+        int what = m.what & 0xFFFF;
+        String key = String.format("%04X", what);
+        String val, hint = "";
+        if (m.obj instanceof byte[]) {
+            // sur le canal 05xx : arg1 = type de trame du boitier CAN, arg2 = longueur
+            byte[] b = (byte[]) m.obj;
+            key += String.format(" t%02X", m.arg1 & 0xFF);
+            StringBuilder h = new StringBuilder();
+            for (int i = 0; i < b.length && i < 24; i++) h.append(String.format("%02X ", b[i]));
+            val = h.toString().trim();
+            if (what == 0x0501) hint = guess(m.arg1 & 0xFF, b);
+        } else {
+            val = m.arg1 + " " + m.arg2 + (m.obj == null ? "" : " " + m.obj);
+            if (val.length() > 40) val = val.substring(0, 40);
         }
+        Row r = rows.get(key);
+        if (r == null) {
+            if (rows.size() >= 300) return true;
+            rows.put(key, r = new Row());
+        }
+        r.count++;
+        if (!val.equals(r.last)) {
+            r.changes++;
+            r.prev2 = r.prev1;
+            r.prev1 = r.last;
+        }
+        r.last = val;
+        r.hint = hint;
         return true;
+    }
+
+    private static int u(byte[] b, int i) { return i < b.length ? b[i] & 0xFF : 0; }
+
+    /** Hypothese : boitier au protocole "Raise" du groupe VW. A confirmer avec les photos. */
+    private static String guess(int type, byte[] b) {
+        switch (type) {
+            case 0x16: return String.format(Locale.US, "vitesse? %.1f km/h", (u(b, 1) << 8 | u(b, 0)) / 16.0);
+            case 0x20: return "touches volant?";
+            case 0x21: return "clim?";
+            case 0x22: case 0x23: return "radars?";
+            case 0x24: return "portes/frein a main?";
+            case 0x26: return "angle volant? " + (short) (u(b, 1) << 8 | u(b, 0));
+            case 0x41:
+                if (u(b, 0) == 2 && b.length >= 13) return String.format(Locale.US,
+                        "regime? %d  vit? %.1f  batt? %.2fV  ext? %.1fC  km? %d  carb? %dL",
+                        u(b, 1) << 8 | u(b, 2), (u(b, 3) << 8 | u(b, 4)) * 0.01, (u(b, 5) << 8 | u(b, 6)) * 0.01,
+                        (short) (u(b, 7) << 8 | u(b, 8)) * 0.1, u(b, 9) << 16 | u(b, 10) << 8 | u(b, 11), u(b, 12));
+                return "infos vehicule? (sous-type " + u(b, 0) + ")";
+            default: return "";
+        }
     }
 
     @Override
@@ -81,7 +107,7 @@ public class SniffActivity extends Activity {
         super.onCreate(b);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         tv = new TextView(this);
-        tv.setTextSize(12);
+        tv.setTextSize(13);
         tv.setTypeface(Typeface.MONOSPACE);
         tv.setTextColor(Color.WHITE);
         tv.setPadding(24, 12, 24, 12);
@@ -204,11 +230,15 @@ public class SniffActivity extends Activity {
     }
 
     private void refresh() {
-        StringBuilder sb = new StringBuilder("ECOUTE TOPWAY — moteur tourne, roule un peu, puis photos de tout\n");
-        sb.append("id [octets]   recus  chgts  dernier (arg1 arg2 donnees)\n");
+        StringBuilder sb = new StringBuilder("ECOUTE TOPWAY v2 — photo de ce tableau apres chaque action\n");
+        sb.append("id  type    recus chgts  dernier  |  avant  |  encore avant\n");
         for (Map.Entry<String, Row> e : rows.entrySet()) {
             Row r = e.getValue();
-            sb.append(String.format(Locale.US, "%-10s %6d %5d  %s\n", e.getKey(), r.count, r.changes, r.last));
+            sb.append(String.format(Locale.US, "%-9s %5d %5d  %s", e.getKey(), r.count, r.changes, r.last));
+            if (!r.prev1.isEmpty()) sb.append("  |  ").append(r.prev1);
+            if (!r.prev2.isEmpty()) sb.append("  |  ").append(r.prev2);
+            sb.append('\n');
+            if (!r.hint.isEmpty()) sb.append("            -> ").append(r.hint).append('\n');
         }
         if (rows.isEmpty()) sb.append("(aucun message recu pour l'instant)\n");
         sb.append('\n').append(info);
@@ -232,5 +262,5 @@ public class SniffActivity extends Activity {
 
 class Row {
     int count, changes;
-    String last = "";
+    String last = "", prev1 = "", prev2 = "", hint = "";
 }
