@@ -10,6 +10,8 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.view.WindowManager;
@@ -34,6 +36,8 @@ public class MainActivity extends Activity {
     private boolean ttsReady;
     private TwBus bus;
     private final JarvisChromeClient chrome = new JarvisChromeClient();
+    private final Updater updater = new Updater(this);
+    private final Handler timer = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle b) {
@@ -82,17 +86,30 @@ public class MainActivity extends Activity {
             for (byte x : data) hex.append(String.format("%02X", x));
             web.evaluateJavascript("window.onCanFrame&&onCanFrame(" + what + "," + type + ",'" + hex + "')", null);
         });
+        timer.postDelayed(this::autoUpdate, 15000); // mises a jour : au lancement, puis toutes les 6 h
         String err = bus.open();
         if (err != null) chrome.errors.append("CAN: ").append(err).append('\n');
+    }
+
+    private void autoUpdate() {
+        updater.check(false);
+        timer.postDelayed(this::autoUpdate, 6 * 3600 * 1000L);
+    }
+
+    @Override
+    protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
+        if (Updater.ACTION.equals(i.getAction())) updater.onStatus(i);
     }
 
     /** Menu natif, ouvert en touchant le badge CAN en haut a gauche de Jarvis. */
     void menu() {
         runOnUiThread(() -> new AlertDialog.Builder(this).setTitle("Jarvis · autoradio")
-                .setItems(new String[]{"Écoute CAN (trames de la voiture)", "Diagnostic de l'écran", "Recharger Jarvis"}, (d, i) -> {
+                .setItems(new String[]{"Écoute CAN (trames de la voiture)", "Diagnostic de l'écran", "Recharger Jarvis", "Vérifier les mises à jour"}, (d, i) -> {
                     if (i == 0) startActivity(new Intent(this, SniffActivity.class));
                     else if (i == 1) showDiag();
-                    else web.reload();
+                    else if (i == 2) web.reload();
+                    else updater.check(true);
                 }).show());
     }
 
@@ -188,6 +205,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        timer.removeCallbacksAndMessages(null);
         if (bus != null) bus.close();
         if (tts != null) tts.shutdown();
         web.destroy();

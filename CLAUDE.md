@@ -52,8 +52,8 @@ Points clés de ce dépôt source :
 
 Il faut un JDK et le SDK Android (`build-tools;34.0.0`, `platforms;android-34`) dans
 `/opt/android-sdk` (ou `ANDROID_HOME`), installables avec `sdkmanager` depuis
-`dl.google.com`. Puis `android/build.sh`. À chaque version : monter `--version-code` /
-`--version-name` dans `build.sh` et le numéro dans `index.html`, puis commit + push sur `main`.
+`dl.google.com`. Puis `android/build.sh`. À chaque version : monter `VERSION_CODE` /
+`VERSION_NAME` en tête de `build.sh`, puis commit + push sur `main`.
 
 - Lancer avec `JAVA_TOOL_OPTIONS=` vide si la variable pollue la sortie.
 - Bug de `d8` 34 avec javac 21 : **pas de classes internes ni anonymes** (plantage
@@ -102,7 +102,7 @@ L'APK embarque maintenant l'interface de `jarvis-giulietta`, convertie par `tool
 - Côté Android : page servie sous `https://jarvis.app/` (interception), GPS, TTS, menu
   natif (toucher le badge « CAN » en haut à gauche) : Écoute CAN, Diagnostic, Recharger.
 - La page tourne en mode « web » (pas de Capacitor) : pas de musique des autres applis,
-  pas de lecture des messages, pas d'écoute vocale, pas de mise à jour intégrée ; les flux
+  pas de lecture des messages, pas d'écoute vocale ; les flux
   d'actualité RSS sont bloqués par CORS.
 
 Vérifié : dans Chromium récent uniquement (aucune erreur JS, mise en page à quelques px de
@@ -112,6 +112,16 @@ a été refusé dans la session. Fluidité sur le SC7731e inconnue.
 
 Comparer original et portage : `node tools/port.mjs --temoin /chemin/orig.html`, puis ouvrir
 `dist/index.html?apercu` (simulateur) à côté.
+
+## Mises à jour intégrées (v2.1)
+
+`Updater.java` lit `version.json` (généré par `android/build.sh` à partir de `VERSION_CODE` /
+`VERSION_NAME`) sur `raw.githubusercontent.com`, 15 s après le lancement puis toutes les 6 h,
+et depuis le menu natif. Si le code est supérieur à celui installé : dialogue, téléchargement
+de `jarvis-hud.apk`, installation par `PackageInstaller` (Android demande confirmation).
+Pour publier une version : monter `VERSION_CODE` et `VERSION_NAME`, `build.sh`, commit, push.
+**Ne marche que si l'APK est signé avec la même clé** : la clé n'existe que dans la session
+qui l'a créée (empreinte SHA-256 `75a2d20d…12e9c6`). Jamais testé sur l'autoradio.
 
 ## Où on en est
 
