@@ -81,25 +81,9 @@ public class SniffActivity extends Activity {
         return true;
     }
 
-    private static int u(byte[] b, int i) { return i < b.length ? b[i] & 0xFF : 0; }
-
-    /** Hypothese : boitier au protocole "Raise" du groupe VW. A confirmer avec les photos. */
+    /** Decodage provisoire : vide tant que le protocole du boitier n'est pas identifie. */
     private static String guess(int type, byte[] b) {
-        switch (type) {
-            case 0x16: return String.format(Locale.US, "vitesse? %.1f km/h", (u(b, 1) << 8 | u(b, 0)) / 16.0);
-            case 0x20: return "touches volant?";
-            case 0x21: return "clim?";
-            case 0x22: case 0x23: return "radars?";
-            case 0x24: return "portes/frein a main?";
-            case 0x26: return "angle volant? " + (short) (u(b, 1) << 8 | u(b, 0));
-            case 0x41:
-                if (u(b, 0) == 2 && b.length >= 13) return String.format(Locale.US,
-                        "regime? %d  vit? %.1f  batt? %.2fV  ext? %.1fC  km? %d  carb? %dL",
-                        u(b, 1) << 8 | u(b, 2), (u(b, 3) << 8 | u(b, 4)) * 0.01, (u(b, 5) << 8 | u(b, 6)) * 0.01,
-                        (short) (u(b, 7) << 8 | u(b, 8)) * 0.1, u(b, 9) << 16 | u(b, 10) << 8 | u(b, 11), u(b, 12));
-                return "infos vehicule? (sous-type " + u(b, 0) + ")";
-            default: return "";
-        }
+        return "";
     }
 
     @Override

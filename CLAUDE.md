@@ -14,8 +14,26 @@ voiture, en lisant les données **par le bus CAN de l'autoradio**, sans dongle O
   SC7731e, Android 8.1 (API 27), écran paysage environ 1024×600.
 - WebView ancien : pas de CSS `min()`, `aspect-ratio`, `inset`, ni `gap` en flexbox.
   Ne pas les utiliser dans `web/index.html`. Processeur faible : éviter les `filter` CSS.
-- Voiture : **inconnue**, demandée plusieurs fois sans réponse. Le tableau de bord ressemble
-  à un groupe VW. À redemander (marque, modèle, année).
+- Voiture : **Alfa Romeo Giulietta 2.0 JTDM** (140 ch, boîte 6).
+
+## Demande en cours (16 nov. 2026)
+
+Reprendre **à l'identique** l'interface du dépôt `EvannDV/jarvis-giulietta` (appli Capacitor 8,
+une page `src/index.html` de 343 Ko : modes DNA, carte 3D MapLibre, Gemini, mécano, perf,
+garage, musique...) mais alimentée par le CAN du TopWay au lieu de l'OBD Bluetooth.
+Ne pas modifier `jarvis-giulietta` : c'est la version OBD validée sur la voiture.
+
+Points clés de ce dépôt source :
+- Source de données isolée : `source.step(dt)` renvoie `{speed, rpm, gear, boost, coolant, oil,
+  batt, soot, regen, regens, load, lph, ext, accel, fuel}`. Il suffit d'ajouter une `CanSource`.
+- Plugins natifs appelés : `BluetoothLe`, `TextToSpeech`, `CapacitorHttp`, `JarvisMedia`,
+  `JarvisNotif`, `JarvisUpdate`, `JarvisVoice`.
+- Obstacle 1 : la page utilise `??`, `?.`, et en CSS `gap` flex (103), `min/max/clamp`,
+  `inset`, `aspect-ratio`, `backdrop-filter`. Le WebView de l'autoradio est antérieur à
+  Chrome 79 : il faut transpiler le JS (Babel) et réécrire le CSS, selon la version exacte
+  (affichée en tête du « Diagnostic de l'écran » depuis la v1.5, avec le support WebGL).
+- Obstacle 2 : le boîtier CAN ne donnera probablement pas turbo, FAP, huile, conso, codes
+  défaut. Ces valeurs resteront à NONE sans OBD. À confirmer par la capture.
 
 ## Contenu du dépôt
 
@@ -59,17 +77,16 @@ Les applis système reçoivent les données via la classe cachée `android.tw.jo
   `0501` arg1=38 arg2=2 obj=`00 00` (3 changements), `0506` obj=`00 00 1C 02`, `0505`, `0202`.
 - Sur `0501` : `arg1` = type de trame du boîtier CAN, `arg2` = longueur, `obj` = `byte[]`.
 
-**Hypothèse non confirmée** : boîtier au protocole « Raise » du groupe VW. Type 0x26 = angle
-volant, 0x16 = vitesse, 0x24 = portes, 0x41 = infos véhicule (sous-type 2 : régime, vitesse,
-tension, température extérieure, kilométrage, carburant), cette dernière envoyée seulement
-sur demande. Ce décodage vient de mémoire, à valider sur de vraies trames.
+L'hypothèse « protocole Raise VW » faite avant de connaître la voiture est abandonnée :
+c'est une Alfa. Le protocole du boîtier reste à identifier à partir des trames.
 
 ## Où on en est
 
 1. Fait : HUD, APK, affichage corrigé pour le vieux WebView (v1.3), écoute CAN v2 (v1.4)
    triée par type de trame avec historique et décodage provisoire.
 2. **En attente de l'utilisateur** : photos du tableau d'écoute v1.4, moteur tournant
-   (tourner le volant, ouvrir une porte, 2000 tr/min, rouler), et le modèle de la voiture.
+   (tourner le volant, ouvrir une porte, 2000 tr/min, rouler), et photo du haut du
+   « Diagnostic de l'écran » v1.5 (lignes GRAPHISME et WEBVIEW).
 3. Ensuite : identifier les trames vitesse/régime/etc., écrire un `TwReader` (même rôle
    qu'`ElmReader`, pousse le JSON vers `onCar`) et en faire la source par défaut.
 4. Si la trame d'infos véhicule n'arrive que sur demande : trouver le format de `write`

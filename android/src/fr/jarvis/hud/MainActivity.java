@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -124,6 +125,9 @@ public class MainActivity extends Activity {
     /** Affiche ce qui permet d'identifier l'autoradio et son acces au bus CAN. */
     private void showDiag() {
         StringBuilder sb = new StringBuilder();
+        try {
+            sb.append("WEBVIEW: ").append(WebSettings.getDefaultUserAgent(this)).append("\n\n");
+        } catch (Throwable t) { sb.append("WEBVIEW: ").append(t).append("\n\n"); }
         sb.append("Android ").append(Build.VERSION.RELEASE).append(" (API ").append(Build.VERSION.SDK_INT).append(")\n");
         sb.append("Fabricant: ").append(Build.MANUFACTURER).append(" / ").append(Build.BRAND).append('\n');
         sb.append("Modele: ").append(Build.MODEL).append(" / ").append(Build.DEVICE).append('\n');
@@ -165,6 +169,11 @@ public class MainActivity extends Activity {
 
         TextView tv = new TextView(this);
         tv.setText(sb);
+        if (web.getUrl() != null) web.evaluateJavascript(
+                "(function(){var c=document.createElement('canvas');return 'webgl1='+!!c.getContext('webgl')"
+                        + "+' webgl2='+!!document.createElement('canvas').getContext('webgl2')"
+                        + "+' ecran='+innerWidth+'x'+innerHeight+' dpr='+devicePixelRatio})()",
+                r -> tv.setText("GRAPHISME: " + r + "\n" + sb));
         tv.setTextSize(13);
         tv.setTypeface(Typeface.MONOSPACE);
         tv.setTextIsSelectable(true);
