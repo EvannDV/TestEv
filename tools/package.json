@@ -1,0 +1,13 @@
+{
+  "name": "jarvis-topway-port",
+  "private": true,
+  "description": "Outils de portage de l'interface jarvis-giulietta vers le vieux WebView de l'autoradio TopWay",
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "acorn": "^8.14.0",
+    "doiuse": "^6.0.5",
+    "postcss": "^8.4.49",
+    "postcss-value-parser": "^4.2.0"
+  }
+}

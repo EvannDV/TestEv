@@ -3,10 +3,7 @@ package fr.jarvis.hud;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -24,42 +21,48 @@ import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
+/**
+ * Affiche l'interface Jarvis (giulietta/dist/index.html, embarquee dans l'APK) et lui fournit
+ * ce que le navigateur de l'autoradio n'a pas : la voix, et les trames du bus CAN TopWay.
+ */
 public class MainActivity extends Activity {
-    private static final String DEMO = "demo", DIAG = "diag", SNIFF = "sniff";
+    static final String ORIGIN = "https://jarvis.app/";
     private WebView web;
     private TextToSpeech tts;
     private boolean ttsReady;
-    private ElmReader reader;
-    private SharedPreferences prefs;
+    private TwBus bus;
+    private final JarvisChromeClient chrome = new JarvisChromeClient();
 
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        prefs = getPreferences(MODE_PRIVATE);
 
         tts = new TextToSpeech(this, status -> {
             if (status != TextToSpeech.SUCCESS) return;
             tts.setLanguage(Locale.FRENCH);
-            tts.setPitch(0.85f);
+            tts.setOnUtteranceProgressListener(new TtsDone(this));
             ttsReady = true;
         });
 
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
-        web.getSettings().setJavaScriptEnabled(true);
-        web.getSettings().setMediaPlaybackRequiresUserGesture(false);
+        WebSettings ws = web.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setDomStorageEnabled(true);          // reglages et historique de Jarvis (localStorage)
+        ws.setDatabaseEnabled(true);
+        ws.setGeolocationEnabled(true);
+        ws.setMediaPlaybackRequiresUserGesture(false);
+        web.setWebViewClient(new JarvisWebClient(getAssets()));
+        web.setWebChromeClient(chrome);
         web.addJavascriptInterface(new Bridge(this), "Android");
         setContentView(web);
 
-        if (Build.VERSION.SDK_INT >= 31
-                && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 1);
+        if (Build.VERSION.SDK_INT >= 23
+                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1); // GPS pour la carte
         } else {
             start();
         }
@@ -70,64 +73,35 @@ public class MainActivity extends Activity {
         start();
     }
 
-    /** Lance le HUD avec le dongle memorise, ou demande lequel utiliser. */
     private void start() {
-        String addr = prefs.getString("device", null);
-        if (addr == null) pickDevice();
-        else use(addr);
+        if (web.getUrl() != null) return;
+        web.loadUrl(ORIGIN + "index.html");
+        // Trames du boitier CAN -> page (CanSource les decode). Lecture seule.
+        bus = new TwBus((what, type, data) -> {
+            StringBuilder hex = new StringBuilder();
+            for (byte x : data) hex.append(String.format("%02X", x));
+            web.evaluateJavascript("window.onCanFrame&&onCanFrame(" + what + "," + type + ",'" + hex + "')", null);
+        });
+        String err = bus.open();
+        if (err != null) chrome.errors.append("CAN: ").append(err).append('\n');
     }
 
-    private void use(String addr) {
-        if (reader != null) reader.shutdown();
-        reader = null;
-        boolean demo = DEMO.equals(addr);
-        web.loadUrl("file:///android_asset/index.html?nofs&autostart" + (demo ? "&demo" : ""));
-        if (demo) return;
-        reader = new ElmReader(addr, json ->
-                runOnUiThread(() -> web.evaluateJavascript("window.onCar&&onCar(" + json + ")", null)));
-        reader.start();
+    /** Menu natif, ouvert en touchant le badge CAN en haut a gauche de Jarvis. */
+    void menu() {
+        runOnUiThread(() -> new AlertDialog.Builder(this).setTitle("Jarvis · autoradio")
+                .setItems(new String[]{"Écoute CAN (trames de la voiture)", "Diagnostic de l'écran", "Recharger Jarvis"}, (d, i) -> {
+                    if (i == 0) startActivity(new Intent(this, SniffActivity.class));
+                    else if (i == 1) showDiag();
+                    else web.reload();
+                }).show());
     }
 
-    private void pickDevice() {
-        final List<String> names = new ArrayList<>();
-        final List<String> addrs = new ArrayList<>();
-        try {
-            BluetoothAdapter a = BluetoothAdapter.getDefaultAdapter();
-            if (a != null) for (BluetoothDevice d : a.getBondedDevices()) {
-                names.add((d.getName() == null ? "?" : d.getName()) + "\n" + d.getAddress());
-                addrs.add(d.getAddress());
-            }
-        } catch (SecurityException ignored) { }
-        names.add("Mode démo (sans voiture)");
-        addrs.add(DEMO);
-        names.add("Écoute CAN de l'autoradio (étape 2)");
-        addrs.add(SNIFF);
-        names.add("Diagnostic de l'écran");
-        addrs.add(DIAG);
-        new AlertDialog.Builder(this)
-                .setTitle(addrs.size() == 3
-                        ? "Aucun appareil Bluetooth appairé. Appaire d'abord le dongle OBD dans les réglages Android."
-                        : "Choisis ton dongle OBD (ELM327)")
-                .setItems(names.toArray(new String[0]), (dlg, i) -> {
-                    if (DIAG.equals(addrs.get(i))) { showDiag(); return; }
-                    if (SNIFF.equals(addrs.get(i))) {
-                        startActivity(new Intent(this, SniffActivity.class));
-                        if (web.getUrl() == null) use(DEMO);
-                        return;
-                    }
-                    prefs.edit().putString("device", addrs.get(i)).apply();
-                    use(addrs.get(i));
-                })
-                .setOnCancelListener(dlg -> { if (web.getUrl() == null) use(DEMO); })
-                .show();
-    }
-
-    /** Affiche ce qui permet d'identifier l'autoradio et son acces au bus CAN. */
     private void showDiag() {
         StringBuilder sb = new StringBuilder();
         try {
             sb.append("WEBVIEW: ").append(WebSettings.getDefaultUserAgent(this)).append("\n\n");
         } catch (Throwable t) { sb.append("WEBVIEW: ").append(t).append("\n\n"); }
+        sb.append("ERREURS JS: ").append(chrome.errors.length() == 0 ? "aucune" : "\n" + chrome.errors).append("\n\n");
         sb.append("Android ").append(Build.VERSION.RELEASE).append(" (API ").append(Build.VERSION.SDK_INT).append(")\n");
         sb.append("Fabricant: ").append(Build.MANUFACTURER).append(" / ").append(Build.BRAND).append('\n');
         sb.append("Modele: ").append(Build.MODEL).append(" / ").append(Build.DEVICE).append('\n');
@@ -181,20 +155,21 @@ public class MainActivity extends Activity {
         ScrollView sv = new ScrollView(this);
         sv.addView(tv);
         new AlertDialog.Builder(this).setTitle("Diagnostic — prends tout en photo").setView(sv)
-                .setPositiveButton("Fermer", (d, w) -> { if (web.getUrl() == null) pickDevice(); }).show();
+                .setPositiveButton("Fermer", null).show();
     }
 
     // Appele depuis la page (window.Android), hors du thread principal.
-    void say(String text) {
-        if (ttsReady) tts.speak(text, TextToSpeech.QUEUE_ADD, null, "jarvis");
+    void say(String text, int id) {
+        if (ttsReady) tts.speak(text, TextToSpeech.QUEUE_ADD, null, String.valueOf(id));
+        else ttsDone(String.valueOf(id));
     }
 
     void hush() {
         if (ttsReady) tts.stop();
     }
 
-    void pickDeviceFromPage() {
-        runOnUiThread(this::pickDevice);
+    void ttsDone(String id) {
+        runOnUiThread(() -> web.evaluateJavascript("window.__ttsDone&&__ttsDone(" + id + ")", null));
     }
 
     @Override
@@ -207,8 +182,13 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onBackPressed() {
+        // Retour : ne quitte pas Jarvis par accident ; le bouton Accueil reste disponible
+    }
+
+    @Override
     protected void onDestroy() {
-        if (reader != null) reader.shutdown();
+        if (bus != null) bus.close();
         if (tts != null) tts.shutdown();
         web.destroy();
         super.onDestroy();

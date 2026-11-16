@@ -42,7 +42,8 @@ Points clés de ce dépôt source :
 - `server.py` : serveur Python optionnel (simulateur, OBD ELM327, CAN + DBC). Hors sujet
   pour l'autoradio, gardé pour un Raspberry Pi.
 - `android/` : appli Java sans Gradle. `MainActivity` (WebView + voix TTS + menu),
-  `ElmReader` (OBD Bluetooth, non testé en vrai), `SniffActivity` (écoute CAN TopWay).
+  `TwBus` (abonnement CAN TopWay), `SniffActivity` (écoute CAN détaillée).
+- `web/index.html` + `server.py` : premier HUD simple, plus utilisé par l'APK.
 - `jarvis-hud.apk` : APK construit, servi par
   `https://github.com/EvannDV/TestEv/raw/main/jarvis-hud.apk`. `index.html` à la racine est
   une page de téléchargement pour GitHub Pages (à activer par l'utilisateur dans Settings → Pages).
@@ -80,18 +81,47 @@ Les applis système reçoivent les données via la classe cachée `android.tw.jo
 L'hypothèse « protocole Raise VW » faite avant de connaître la voiture est abandonnée :
 c'est une Alfa. Le protocole du boîtier reste à identifier à partir des trames.
 
+## Portage Giulietta (v2.0, 16 nov. 2026)
+
+L'APK embarque maintenant l'interface de `jarvis-giulietta`, convertie par `tools/port.mjs` :
+
+- `giulietta/src/index.html` : copie **non modifiée** de `jarvis-giulietta/src/index.html`
+  (commit 3a76c6e). Pour reprendre une version plus récente : recopier le fichier, relancer
+  `node tools/port.mjs` ; les retouches sont des `patch()` qui échouent si le motif a changé.
+- `tools/css.mjs` : `inset` -> top/right/bottom/left ; `gap` flex -> marges (`>*+*`, en
+  `!important`) ; `gap` grid -> `grid-gap` ; `clamp/min/max` -> variables `--jxN` calculées
+  en px au lancement ; `place-items`, `padding-block` développés.
+- `tools/shim.js` : polyfills, voix (`speechSynthesis` -> `Android.say`), **carte 2D en
+  tuiles images CARTO** exposée comme `window.maplibregl` (plus de MapLibre ni de WebGL),
+  rapports d'aspect, bandeau rouge d'erreurs JS.
+- `tools/cansource.js` : `CanSource extends ObdSource`, alimentée par
+  `onCanFrame(what, type, hex)` (trames brutes envoyées par `TwBus.java`) et la table
+  `CAN_DECODERS`, **vide pour l'instant**. Tout reste à NONE tant qu'elle est vide.
+- Babel cible Chrome 58 ; `acorn` vérifie qu'aucune syntaxe récente ne subsiste.
+- `giulietta/dist/index.html` : résultat, commité, copié dans l'APK par `android/build.sh`.
+- Côté Android : page servie sous `https://jarvis.app/` (interception), GPS, TTS, menu
+  natif (toucher le badge « CAN » en haut à gauche) : Écoute CAN, Diagnostic, Recharger.
+- La page tourne en mode « web » (pas de Capacitor) : pas de musique des autres applis,
+  pas de lecture des messages, pas d'écoute vocale, pas de mise à jour intégrée ; les flux
+  d'actualité RSS sont bloqués par CORS.
+
+Vérifié : dans Chromium récent uniquement (aucune erreur JS, mise en page à quelques px de
+l'original sur les 5 pages × 3 modes DNA en 1024×600, carte avec tuiles de test, trames CAN
+simulées). **Jamais exécuté sur un vieux moteur** : le téléchargement d'un ancien Chromium
+a été refusé dans la session. Fluidité sur le SC7731e inconnue.
+
+Comparer original et portage : `node tools/port.mjs --temoin /chemin/orig.html`, puis ouvrir
+`dist/index.html?apercu` (simulateur) à côté.
+
 ## Où on en est
 
-1. Fait : HUD, APK, affichage corrigé pour le vieux WebView (v1.3), écoute CAN v2 (v1.4)
-   triée par type de trame avec historique et décodage provisoire.
-2. **En attente de l'utilisateur** : photos du tableau d'écoute v1.4, moteur tournant
-   (tourner le volant, ouvrir une porte, 2000 tr/min, rouler), et photo du haut du
-   « Diagnostic de l'écran » v1.5 (lignes GRAPHISME et WEBVIEW).
-3. Ensuite : identifier les trames vitesse/régime/etc., écrire un `TwReader` (même rôle
-   qu'`ElmReader`, pousse le JSON vers `onCar`) et en faire la source par défaut.
-4. Si la trame d'infos véhicule n'arrive que sur demande : trouver le format de `write`
-   utilisé par `com.tw.car` avant d'envoyer quoi que ce soit. **Ne rien envoyer à l'aveugle
-   sur le bus** ; l'appli est en lecture seule jusqu'ici.
+1. Fait : portage v2.0 ci-dessus, poussé sur `main`.
+2. **En attente de l'utilisateur** : photo de la v2.0 sur l'autoradio (et du bandeau rouge
+   ou du Diagnostic s'il y a des erreurs) ; photos de l'« Écoute CAN » moteur tournant
+   (volant, porte, 2000 tr/min, rouler).
+3. Ensuite : remplir `CAN_DECODERS` d'après les trames, corriger l'affichage d'après les photos.
+4. Si une trame n'arrive que sur demande : trouver le format de `write` utilisé par
+   `com.tw.car` avant d'envoyer quoi que ce soit. **Ne rien envoyer à l'aveugle sur le bus.**
 
 ## Règles
 

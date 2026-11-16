@@ -9,11 +9,11 @@ final class Bridge {
     Bridge(MainActivity app) { this.app = app; }
 
     @JavascriptInterface
-    public void say(String text) { app.say(text); }
+    public void say(String text, int id) { app.say(text, id); }
 
     @JavascriptInterface
     public void hush() { app.hush(); }
 
     @JavascriptInterface
-    public void pickDevice() { app.pickDeviceFromPage(); }
+    public void menu() { app.menu(); }
 }
