@@ -18,6 +18,9 @@ final class Bridge {
     public void menu() { app.menu(); }
 
     @JavascriptInterface
+    public void ble(String method, int id, String args) { app.ble.call(method, id, args); }
+
+    @JavascriptInterface
     public void listen(int id) { app.listen(id); }
 
     @JavascriptInterface

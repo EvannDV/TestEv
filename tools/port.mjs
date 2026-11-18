@@ -28,30 +28,29 @@ patch('const map3d = () => AI.cfg.map3d !== false;', 'const map3d = () => false;
 patch("const hasWebGL = () => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } };", 'const hasWebGL = () => true;');
 patch('<label class="chk"><input type="checkbox" id="sMap3d">', '<label class="chk" hidden><input type="checkbox" id="sMap3d">');
 
-// Source de données : le bus CAN de l'autoradio à la place de l'OBD Bluetooth
-patch('class NoneSource {', fs.readFileSync(path.join(HERE, 'cansource.js'), 'utf8') + '\nclass NoneSource {');
-patch("$('obdBtn').textContent = live ?", "$('obdBtn').textContent = source instanceof CanSource ? source.badge() : live ?");
-patch("$('obdBtn').addEventListener('click', async () => {", "$('obdBtn').addEventListener('click', async () => {\n  if (window.JARVIS_TOPWAY) { window.Android.menu(); return; }");
-patch("// Appli Android : reconnexion automatique au dernier adaptateur utilisé", `if (window.JARVIS_TOPWAY) {
-  const can = window.JARVIS_CAN = new CanSource();
-  adoptObd(can);
-  can.onLost = () => { setObdUi(); say('Je ne reçois plus rien du bus CAN, monsieur.'); };
-  can.onBack = () => { const first = !can.everConnected; can.everConnected = true; setObdUi(); say(first ? \`Liaison établie avec le bus CAN de l'autoradio. \${can.sup.size} données disponibles.\` : 'Liaison CAN rétablie.'); };
-  setInterval(setObdUi, 2000);
+// OBD : l'OBDLink CX en Bluetooth basse consommation, comme dans l'appli d'origine. Le code OBD
+// d'origine passe par le Web Bluetooth (WebBleLink), fourni ici par Android (voir shim.js).
+// Reconnexion automatique au dernier adaptateur, comme l'appli Android d'origine.
+patch("// Appli Android : reconnexion automatique au dernier adaptateur utilisé", `if (window.JARVIS_TOPWAY && navigator.bluetooth && navigator.bluetooth.knownDevice) {
+  const saved = store.get('obdDevice', null);
+  if (saved && saved.id) {
+    const link = new WebBleLink(); link.dev = navigator.bluetooth.knownDevice(saved.id, saved.name);
+    link.id = saved.id; link.name = saved.name || 'OBD';
+    link.dev.addEventListener('gattserverdisconnected', () => link.onLost && link.onLost());
+    const obd = new ObdSource(link); obd.label = saved.name || 'OBD';
+    adoptObd(obd); obd.startAuto();
+  }
 }
 // Appli Android : reconnexion automatique au dernier adaptateur utilisé`);
-patch('source = source === sim ? none : sim; setObdUi();', 'source = source === sim ? (window.JARVIS_CAN || none) : sim; setObdUi();');
+patch(`say(hello() + (NATIVE ? " Je m'y reconnecterai tout seul aux prochains démarrages." : ''));`, `say(hello() + (NATIVE || window.JARVIS_TOPWAY ? " Je m'y reconnecterai tout seul aux prochains démarrages." : ''));`);
+patch("'Le Bluetooth est bloqué dans cette prévisualisation. Il fonctionnera depuis la version installée sur la tablette.'", "(window.JARVIS_TOPWAY ? \"J'ai besoin de l'autorisation Bluetooth et de la localisation, monsieur. Acceptez-les quand Android les demande.\" : 'Le Bluetooth est bloqué dans cette prévisualisation. Il fonctionnera depuis la version installée sur la tablette.')");
 
-// Textes : la liaison est le CAN, plus l'OBD ; le navigateur n'est plus Chrome ; la carte vient de CARTO
-const CAN_TXT = "source instanceof CanSource ? (source.connected ? 'bus CAN de l\\'autoradio connecté' : 'bus CAN de l\\'autoradio, aucune donnée reçue pour l\\'instant') : ";
-patch("source: source === sim ? 'simulation (données de démonstration)' : source instanceof ObdSource ? ", "source: source === sim ? 'simulation (données de démonstration)' : " + CAN_TXT + "source instanceof ObdSource ? ");
-patch("const src = source === sim ? 'simulation' : source instanceof ObdSource ? ", "const src = source === sim ? 'simulation' : " + CAN_TXT + "source instanceof ObdSource ? ");
-patch("source === sim ? 'Démo' : source instanceof ObdSource && source.connected ? 'OBD connecté' : 'OBD en attente'", "source === sim ? 'Démo' : source instanceof CanSource ? (source.connected ? 'CAN connecté' : 'CAN en attente') : source instanceof ObdSource && source.connected ? 'OBD connecté' : 'OBD en attente'");
+// Textes : le navigateur n'est plus Chrome ; la carte vient d'Esri
 patch('Autorisez la position pour ce site dans Chrome, puis touchez ici.', "Autorisez la position pour Jarvis dans les réglages Android, puis touchez ici.");
 patch('Autorisez-la dans Chrome, puis touchez la carte.', 'Autorisez-la dans les réglages Android, puis touchez la carte.');
 const ATTRIB = '© OpenFreeMap · OpenMapTiles · contributeurs OpenStreetMap · OSRM';
 if (html.split(ATTRIB).length !== 2) throw new Error('retouche : crédit de la carte introuvable');
-const outHtml = html.replace(ATTRIB, '© CARTO · contributeurs OpenStreetMap · OSRM');
+const outHtml = html.replace(ATTRIB, '© Esri · contributeurs OpenStreetMap · OSRM');
 
 /* ---------- conversion pour le vieux moteur web ---------- */
 const report = [];

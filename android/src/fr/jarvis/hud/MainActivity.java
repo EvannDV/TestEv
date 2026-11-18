@@ -32,7 +32,7 @@ import java.util.Locale;
 
 /**
  * Affiche l'interface Jarvis (giulietta/dist/index.html, embarquee dans l'APK) et lui fournit
- * ce que le navigateur de l'autoradio n'a pas : la voix, et les trames du bus CAN TopWay.
+ * ce que le navigateur de l'autoradio n'a pas : la voix, le micro et le Bluetooth de l'adaptateur OBD.
  */
 public class MainActivity extends Activity {
     static final String ORIGIN = "https://jarvis.app/";
@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
     private String ttsInfo = "en attente";
     private SpeechRecognizer sr;
     private int pendingListen;
-    private TwBus bus;
+    final BleBridge ble = new BleBridge(this);
     private final JarvisChromeClient chrome = new JarvisChromeClient();
     private final Updater updater = new Updater(this);
     private final Handler timer = new Handler(Looper.getMainLooper());
@@ -75,9 +75,14 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(this), "Android");
         setContentView(web);
 
-        if (Build.VERSION.SDK_INT >= 23
-                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1); // GPS pour la carte
+        // GPS (carte) et recherche Bluetooth de l'adaptateur OBD
+        String[] need = Build.VERSION.SDK_INT >= 31
+                ? new String[]{Manifest.permission.ACCESS_FINE_LOCATION, "android.permission.BLUETOOTH_SCAN", "android.permission.BLUETOOTH_CONNECT"}
+                : new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
+        boolean missing = false;
+        if (Build.VERSION.SDK_INT >= 23) for (String n : need) missing |= checkSelfPermission(n) != PackageManager.PERMISSION_GRANTED;
+        if (missing) {
+            requestPermissions(need, 1);
         } else {
             start();
         }
@@ -96,15 +101,7 @@ public class MainActivity extends Activity {
     private void start() {
         if (web.getUrl() != null) return;
         web.loadUrl(ORIGIN + "index.html");
-        // Trames du boitier CAN -> page (CanSource les decode). Lecture seule.
-        bus = new TwBus((what, type, data) -> {
-            StringBuilder hex = new StringBuilder();
-            for (byte x : data) hex.append(String.format("%02X", x));
-            web.evaluateJavascript("window.onCanFrame&&onCanFrame(" + what + "," + type + ",'" + hex + "')", null);
-        });
         timer.postDelayed(this::autoUpdate, 15000); // mises a jour : au lancement, puis toutes les 6 h
-        String err = bus.open();
-        if (err != null) chrome.errors.append("CAN: ").append(err).append('\n');
     }
 
     private void autoUpdate() {
@@ -121,9 +118,8 @@ public class MainActivity extends Activity {
     /** Menu natif, ouvert en touchant le badge CAN en haut a gauche de Jarvis. */
     void menu() {
         runOnUiThread(() -> new AlertDialog.Builder(this).setTitle("Jarvis · autoradio")
-                .setItems(new String[]{"Écoute CAN (trames de la voiture)", "Diagnostic de l'écran", "Recharger Jarvis", "Vérifier les mises à jour"}, (d, i) -> {
-                    if (i == 0) startActivity(new Intent(this, SniffActivity.class));
-                    else if (i == 1) showDiag();
+                .setItems(new String[]{"Vérifier les mises à jour", "Diagnostic de l'écran", "Recharger Jarvis"}, (d, i) -> {
+                    if (i == 1) showDiag();
                     else if (i == 2) web.reload();
                     else updater.check(true);
                 }).show());
@@ -243,6 +239,11 @@ public class MainActivity extends Activity {
         if (why != null) toast("Reconnaissance vocale : " + why + ".");
     }
 
+    /** Execute du JavaScript dans la page, depuis n'importe quel fil. */
+    void js(String code) {
+        runOnUiThread(() -> web.evaluateJavascript(code, null));
+    }
+
     void toast(String msg) {
         runOnUiThread(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
     }
@@ -272,7 +273,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         timer.removeCallbacksAndMessages(null);
-        if (bus != null) bus.close();
+        ble.closeAll();
         if (sr != null) sr.destroy();
         if (tts != null) tts.shutdown();
         web.destroy();

@@ -81,9 +81,80 @@ if (window.Android && window.Android.listen) {
   setGlobal('SpeechRecognition', SR); setGlobal('webkitSpeechRecognition', SR);
 }
 
+/* ---------- Bluetooth basse consommation (OBDLink CX) : le Web Bluetooth, fourni par Android ----------
+   Même interface que navigator.bluetooth de Chrome, pour que le code OBD d'origine (WebBleLink)
+   marche tel quel. Chaque appel part vers Android.ble(méthode, n°, arguments JSON) ; la réponse
+   revient par __bleDone(n°, ok, résultat JSON), les notifications par __bleEvent(...). */
+if (window.Android && window.Android.ble) {
+  let seq = 0; const pend = {}, devs = {}, chars = {};
+  const call = (method, args) => new Promise((res, rej) => {
+    const id = ++seq; pend[id] = { res, rej };
+    window.Android.ble(method, id, JSON.stringify(args || []));
+  });
+  window.__bleDone = (id, ok, data) => {
+    const p = pend[id]; delete pend[id]; if (!p) return;
+    if (ok) p.res(data ? JSON.parse(data) : null);
+    else { const d = data ? JSON.parse(data) : {}, e = new Error(d.message || 'Bluetooth'); e.name = d.name || 'NetworkError'; p.rej(e); }
+  };
+  const hexBytes = h => { const b = new Uint8Array(h.length / 2); for (let i = 0; i < b.length; i++) b[i] = parseInt(h.substr(i * 2, 2), 16); return b; };
+  const toHex = d => { const b = d instanceof DataView ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength) : new Uint8Array(d.buffer || d); let h = ''; for (let i = 0; i < b.length; i++) h += (b[i] < 16 ? '0' : '') + b[i].toString(16); return h; };
+  const Emitter = { addEventListener(t, f) { (this._l[t] = this._l[t] || []).push(f); }, removeEventListener(t, f) { this._l[t] = (this._l[t] || []).filter(x => x !== f); }, _fire(t, e) { (this._l[t] || []).slice().forEach(f => { try { f(e); } catch (err) { console.error(err); } }); } };
+  const BleChar = function (dev, svc, c) {
+    this._l = {}; this.service = { uuid: svc }; this.uuid = c.uuid; this._dev = dev; this.value = null;
+    this.properties = { write: !!c.write, writeWithoutResponse: !!c.writeNoResp, notify: !!c.notify, indicate: !!c.indicate, read: !!c.read };
+    chars[dev.id + '|' + svc + '|' + c.uuid] = this;
+  };
+  Object.assign(BleChar.prototype, Emitter, {
+    startNotifications() { return call('notify', [this._dev.id, this.service.uuid, this.uuid]).then(() => this); },
+    writeValue(d) { return call('write', [this._dev.id, this.service.uuid, this.uuid, toHex(d), false]); },
+    writeValueWithoutResponse(d) { return call('write', [this._dev.id, this.service.uuid, this.uuid, toHex(d), true]); }
+  });
+  const BleDevice = function (id, name) {
+    this._l = {}; this.id = id; this.name = name; const dev = this;
+    this.gatt = {
+      device: dev, connected: false, _svcs: [],
+      connect() { return call('connect', [dev.id]).then(svcs => { this._svcs = svcs || []; this.connected = true; return this; }); },
+      disconnect() { this.connected = false; call('disconnect', [dev.id]).catch(() => {}); },
+      getPrimaryService(uuid) {
+        const s = this._svcs.filter(x => x.uuid === String(uuid).toLowerCase())[0];
+        if (!s) { const e = new Error('service absent'); e.name = 'NotFoundError'; return Promise.reject(e); }
+        return Promise.resolve({ uuid: s.uuid, device: dev, getCharacteristics: () => Promise.resolve(s.chars.map(c => new BleChar(dev, s.uuid, c))) });
+      }
+    };
+  };
+  Object.assign(BleDevice.prototype, Emitter);
+  const known = (id, name) => devs[id] || (devs[id] = new BleDevice(id, name || 'OBD'));
+  window.__bleEvent = (type, devId, svc, chr, hex) => {
+    const dev = devs[devId]; if (!dev) return;
+    if (type === 'disconnected') { if (dev.gatt.connected) { dev.gatt.connected = false; dev._fire('gattserverdisconnected', { target: dev }); } return; }
+    const c = chars[devId + '|' + svc + '|' + chr]; if (!c) return;
+    c.value = new DataView(hexBytes(hex).buffer);
+    c._fire('characteristicvaluechanged', { target: c });
+  };
+  setGlobal('bluetoothShim', true);
+  try {
+    Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: {
+      requestDevice: () => call('pick', []).then(d => known(d.id, d.name)),
+      getAvailability: () => Promise.resolve(true),
+      knownDevice: known
+    } });
+  } catch (e) { console.error('Bluetooth : ' + e.message); }
+}
+
+/* ---------- menu Android : appui long sur « J.A.R.V.I.S » en haut à gauche ---------- */
+if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', () => {
+  const el = document.querySelector('.top .brand'); if (!el) return;
+  let t = null;
+  const stop = () => { clearTimeout(t); t = null; };
+  el.addEventListener('touchstart', () => { stop(); t = setTimeout(() => { t = null; window.Android.menu(); }, 700); }, { passive: true });
+  el.addEventListener('mousedown', () => { stop(); t = setTimeout(() => { t = null; window.Android.menu(); }, 700); });
+  ['touchend', 'touchmove', 'touchcancel', 'mouseup', 'mouseleave'].forEach(n => el.addEventListener(n, stop));
+});
+
 /* ---------- carte 2D en tuiles images, avec l'interface de MapLibre utilisée par Jarvis ---------- */
 (function () {
-  const TILE = 256, R2D = 180 / Math.PI;
+  const TILE = 256, R2D = 180 / Math.PI, MAXZ = 16; // le fond Esri s'arrête au zoom 16 : au-delà on agrandit
+  const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
   const lon2x = (lon, z) => (lon + 180) / 360 * TILE * Math.pow(2, z);
   const lat2y = (lat, z) => { const s = Math.sin(lat / R2D); return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * TILE * Math.pow(2, z); };
   const css = (el, s) => { el.setAttribute('style', s); return el; };
@@ -99,7 +170,8 @@ if (window.Android && window.Android.listen) {
     this.tileBox = css(document.createElement('div'), 'position:absolute;left:0;top:0');
     this.canvas = css(document.createElement('canvas'), 'position:absolute;pointer-events:none');
     this.markBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:0;height:0');
-    this.world.appendChild(this.tileBox); this.world.appendChild(this.canvas);
+    this.labBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;opacity:.85');
+    this.world.appendChild(this.tileBox); this.world.appendChild(this.labBox); this.world.appendChild(this.canvas);
     box.appendChild(this.world); box.appendChild(this.markBox);
     this.resize();
     setTimeout(() => { this.loaded = true; this.fire('load'); this.fire('styledata'); }, 0);
@@ -130,7 +202,7 @@ if (window.Android && window.Android.listen) {
 
   // Pose les tuiles et le tracé pour l'état courant ; entre deux poses on ne fait que déplacer le bloc
   P.layout = function () {
-    const c = this.c, z = Math.max(2, Math.min(19, Math.round(c.zoom))), n = Math.pow(2, z);
+    const c = this.c, z = Math.max(2, Math.min(MAXZ, Math.round(c.zoom))), n = Math.pow(2, z);
     const cx = lon2x(c.lon, z), cy = lat2y(c.lat, z);
     this.ref = { z, cx, cy, zoom: c.zoom };
     const k = Math.pow(2, c.zoom - z), reach = this.rad / k + TILE;
@@ -141,14 +213,23 @@ if (window.Android && window.Android.listen) {
       keep[key] = 1;
       let img = this.tiles[key];
       if (!img) {
+        // Fond sombre Esri (sans clé) + noms de rues par-dessus ; si Esri ne répond pas : OpenStreetMap
         img = this.tiles[key] = new Image(); img.draggable = false; img.alt = '';
-        img.onerror = () => { img.style.visibility = 'hidden'; }; // hors ligne : pas d'icône d'image cassée
-        img.src = 'https://' + 'abcd'[(xx + y) % 4] + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xx + '/' + y + '.png';
-        this.tileBox.appendChild(img);
+        const lab = img.lab = new Image(); lab.draggable = false; lab.alt = '';
+        lab.onerror = () => { lab.style.visibility = 'hidden'; };
+        img.onerror = () => {
+          if (!img.osm) { img.osm = true; lab.style.visibility = 'hidden'; img.src = 'https://tile.openstreetmap.org/' + z + '/' + xx + '/' + y + '.png'; }
+          else img.style.visibility = 'hidden'; // hors ligne : pas d'icône d'image cassée
+        };
+        img.src = ESRI + 'World_Dark_Gray_Base/MapServer/tile/' + z + '/' + y + '/' + xx;
+        lab.src = ESRI + 'World_Dark_Gray_Reference/MapServer/tile/' + z + '/' + y + '/' + xx;
+        this.tileBox.appendChild(img); this.labBox.appendChild(lab);
       }
-      css(img, (img.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + 'position:absolute;width:' + (TILE + 1) + 'px;height:' + (TILE + 1) + 'px;left:' + Math.round(x * TILE - cx) + 'px;top:' + Math.round(y * TILE - cy) + 'px');
+      const pos = 'position:absolute;width:' + (TILE + 1) + 'px;height:' + (TILE + 1) + 'px;left:' + Math.round(x * TILE - cx) + 'px;top:' + Math.round(y * TILE - cy) + 'px';
+      css(img, (img.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + pos);
+      css(img.lab, (img.lab.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + pos);
     }
-    for (const key in this.tiles) if (!keep[key]) { this.tiles[key].remove(); delete this.tiles[key]; }
+    for (const key in this.tiles) if (!keep[key]) { this.tiles[key].lab.remove(); this.tiles[key].remove(); delete this.tiles[key]; }
     this.draw(); this.frame();
   };
   P.draw = function () {
@@ -186,7 +267,7 @@ if (window.Android && window.Android.listen) {
     const k = Math.pow(2, c.zoom - r.z), dx = (lon2x(c.lon, r.z) - r.cx) * k, dy = (lat2y(c.lat, r.z) - r.cy) * k, a = this.anchor();
     this.world.style.transform = 'translate(' + a[0] + 'px,' + a[1] + 'px) rotate(' + -c.bearing + 'deg) translate(' + -dx + 'px,' + -dy + 'px) scale(' + k + ')';
     this.markers.forEach(m => m.place());
-    if (Math.abs(dx) > TILE * 0.75 || Math.abs(dy) > TILE * 0.75 || Math.abs(c.zoom - r.zoom) > 0.35 || Math.round(c.zoom) !== r.z && !this.anim) this.layout();
+    if (Math.abs(dx) > TILE * 0.75 || Math.abs(dy) > TILE * 0.75 || Math.abs(c.zoom - r.zoom) > 0.35 || Math.max(2, Math.min(MAXZ, Math.round(c.zoom))) !== r.z && !this.anim) this.layout();
   };
   P.project = function (ll) {
     const c = this.c, s = Math.pow(2, c.zoom), a = this.anchor(), t = -c.bearing / R2D;

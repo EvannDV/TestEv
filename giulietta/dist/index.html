@@ -1246,7 +1246,7 @@ button{cursor:pointer}
         <div id="realWrap" hidden><div id="realMap"></div>
           <svg class="car-ico" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3l11 26-11-6-11 6z" fill="currentColor"/></svg>
           <span class="map-msg" id="mapMsg">Recherche du signal GPS…</span>
-          <span class="attrib">© CARTO · contributeurs OpenStreetMap · OSRM</span>
+          <span class="attrib">© Esri · contributeurs OpenStreetMap · OSRM</span>
         </div>
         <div class="turn">
           <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path id="turnIco" d="M14 36V18h14M22 11l7 7-7 7"/></svg>
@@ -1608,9 +1608,187 @@ if (window.Android && window.Android.listen) {
   setGlobal('SpeechRecognition', SR);
   setGlobal('webkitSpeechRecognition', SR);
 }
+if (window.Android && window.Android.ble) {
+  let seq = 0;
+  const pend = {},
+    devs = {},
+    chars = {};
+  const call = (method, args) => new Promise((res, rej) => {
+    const id = ++seq;
+    pend[id] = {
+      res,
+      rej
+    };
+    window.Android.ble(method, id, JSON.stringify(args || []));
+  });
+  window.__bleDone = (id, ok, data) => {
+    const p = pend[id];
+    delete pend[id];
+    if (!p) return;
+    if (ok) p.res(data ? JSON.parse(data) : null);else {
+      const d = data ? JSON.parse(data) : {},
+        e = new Error(d.message || 'Bluetooth');
+      e.name = d.name || 'NetworkError';
+      p.rej(e);
+    }
+  };
+  const hexBytes = h => {
+    const b = new Uint8Array(h.length / 2);
+    for (let i = 0; i < b.length; i++) b[i] = parseInt(h.substr(i * 2, 2), 16);
+    return b;
+  };
+  const toHex = d => {
+    const b = d instanceof DataView ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength) : new Uint8Array(d.buffer || d);
+    let h = '';
+    for (let i = 0; i < b.length; i++) h += (b[i] < 16 ? '0' : '') + b[i].toString(16);
+    return h;
+  };
+  const Emitter = {
+    addEventListener(t, f) {
+      (this._l[t] = this._l[t] || []).push(f);
+    },
+    removeEventListener(t, f) {
+      this._l[t] = (this._l[t] || []).filter(x => x !== f);
+    },
+    _fire(t, e) {
+      (this._l[t] || []).slice().forEach(f => {
+        try {
+          f(e);
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
+  };
+  const BleChar = function (dev, svc, c) {
+    this._l = {};
+    this.service = {
+      uuid: svc
+    };
+    this.uuid = c.uuid;
+    this._dev = dev;
+    this.value = null;
+    this.properties = {
+      write: !!c.write,
+      writeWithoutResponse: !!c.writeNoResp,
+      notify: !!c.notify,
+      indicate: !!c.indicate,
+      read: !!c.read
+    };
+    chars[dev.id + '|' + svc + '|' + c.uuid] = this;
+  };
+  Object.assign(BleChar.prototype, Emitter, {
+    startNotifications() {
+      return call('notify', [this._dev.id, this.service.uuid, this.uuid]).then(() => this);
+    },
+    writeValue(d) {
+      return call('write', [this._dev.id, this.service.uuid, this.uuid, toHex(d), false]);
+    },
+    writeValueWithoutResponse(d) {
+      return call('write', [this._dev.id, this.service.uuid, this.uuid, toHex(d), true]);
+    }
+  });
+  const BleDevice = function (id, name) {
+    this._l = {};
+    this.id = id;
+    this.name = name;
+    const dev = this;
+    this.gatt = {
+      device: dev,
+      connected: false,
+      _svcs: [],
+      connect() {
+        return call('connect', [dev.id]).then(svcs => {
+          this._svcs = svcs || [];
+          this.connected = true;
+          return this;
+        });
+      },
+      disconnect() {
+        this.connected = false;
+        call('disconnect', [dev.id]).catch(() => {});
+      },
+      getPrimaryService(uuid) {
+        const s = this._svcs.filter(x => x.uuid === String(uuid).toLowerCase())[0];
+        if (!s) {
+          const e = new Error('service absent');
+          e.name = 'NotFoundError';
+          return Promise.reject(e);
+        }
+        return Promise.resolve({
+          uuid: s.uuid,
+          device: dev,
+          getCharacteristics: () => Promise.resolve(s.chars.map(c => new BleChar(dev, s.uuid, c)))
+        });
+      }
+    };
+  };
+  Object.assign(BleDevice.prototype, Emitter);
+  const known = (id, name) => devs[id] || (devs[id] = new BleDevice(id, name || 'OBD'));
+  window.__bleEvent = (type, devId, svc, chr, hex) => {
+    const dev = devs[devId];
+    if (!dev) return;
+    if (type === 'disconnected') {
+      if (dev.gatt.connected) {
+        dev.gatt.connected = false;
+        dev._fire('gattserverdisconnected', {
+          target: dev
+        });
+      }
+      return;
+    }
+    const c = chars[devId + '|' + svc + '|' + chr];
+    if (!c) return;
+    c.value = new DataView(hexBytes(hex).buffer);
+    c._fire('characteristicvaluechanged', {
+      target: c
+    });
+  };
+  setGlobal('bluetoothShim', true);
+  try {
+    Object.defineProperty(navigator, 'bluetooth', {
+      configurable: true,
+      value: {
+        requestDevice: () => call('pick', []).then(d => known(d.id, d.name)),
+        getAvailability: () => Promise.resolve(true),
+        knownDevice: known
+      }
+    });
+  } catch (e) {
+    console.error('Bluetooth : ' + e.message);
+  }
+}
+if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', () => {
+  const el = document.querySelector('.top .brand');
+  if (!el) return;
+  let t = null;
+  const stop = () => {
+    clearTimeout(t);
+    t = null;
+  };
+  el.addEventListener('touchstart', () => {
+    stop();
+    t = setTimeout(() => {
+      t = null;
+      window.Android.menu();
+    }, 700);
+  }, {
+    passive: true
+  });
+  el.addEventListener('mousedown', () => {
+    stop();
+    t = setTimeout(() => {
+      t = null;
+      window.Android.menu();
+    }, 700);
+  });
+  ['touchend', 'touchmove', 'touchcancel', 'mouseup', 'mouseleave'].forEach(n => el.addEventListener(n, stop));
+});
 (function () {
   const TILE = 256,
-    R2D = 180 / Math.PI;
+    R2D = 180 / Math.PI,
+    MAXZ = 16;
+  const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
   const lon2x = (lon, z) => (lon + 180) / 360 * TILE * Math.pow(2, z);
   const lat2y = (lat, z) => {
     const s = Math.sin(lat / R2D);
@@ -1653,7 +1831,9 @@ if (window.Android && window.Android.listen) {
     this.tileBox = css(document.createElement('div'), 'position:absolute;left:0;top:0');
     this.canvas = css(document.createElement('canvas'), 'position:absolute;pointer-events:none');
     this.markBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:0;height:0');
+    this.labBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;opacity:.85');
     this.world.appendChild(this.tileBox);
+    this.world.appendChild(this.labBox);
     this.world.appendChild(this.canvas);
     box.appendChild(this.world);
     box.appendChild(this.markBox);
@@ -1742,7 +1922,7 @@ if (window.Android && window.Android.listen) {
   };
   P.layout = function () {
     const c = this.c,
-      z = Math.max(2, Math.min(19, Math.round(c.zoom))),
+      z = Math.max(2, Math.min(MAXZ, Math.round(c.zoom))),
       n = Math.pow(2, z);
     const cx = lon2x(c.lon, z),
       cy = lat2y(c.lat, z);
@@ -1768,15 +1948,30 @@ if (window.Android && window.Android.listen) {
         img = this.tiles[key] = new Image();
         img.draggable = false;
         img.alt = '';
-        img.onerror = () => {
-          img.style.visibility = 'hidden';
+        const lab = img.lab = new Image();
+        lab.draggable = false;
+        lab.alt = '';
+        lab.onerror = () => {
+          lab.style.visibility = 'hidden';
         };
-        img.src = 'https://' + 'abcd'[(xx + y) % 4] + '.basemaps.cartocdn.com/dark_all/' + z + '/' + xx + '/' + y + '.png';
+        img.onerror = () => {
+          if (!img.osm) {
+            img.osm = true;
+            lab.style.visibility = 'hidden';
+            img.src = 'https://tile.openstreetmap.org/' + z + '/' + xx + '/' + y + '.png';
+          } else img.style.visibility = 'hidden';
+        };
+        img.src = ESRI + 'World_Dark_Gray_Base/MapServer/tile/' + z + '/' + y + '/' + xx;
+        lab.src = ESRI + 'World_Dark_Gray_Reference/MapServer/tile/' + z + '/' + y + '/' + xx;
         this.tileBox.appendChild(img);
+        this.labBox.appendChild(lab);
       }
-      css(img, (img.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + 'position:absolute;width:' + (TILE + 1) + 'px;height:' + (TILE + 1) + 'px;left:' + Math.round(x * TILE - cx) + 'px;top:' + Math.round(y * TILE - cy) + 'px');
+      const pos = 'position:absolute;width:' + (TILE + 1) + 'px;height:' + (TILE + 1) + 'px;left:' + Math.round(x * TILE - cx) + 'px;top:' + Math.round(y * TILE - cy) + 'px';
+      css(img, (img.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + pos);
+      css(img.lab, (img.lab.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + pos);
     }
     for (const key in this.tiles) if (!keep[key]) {
+      this.tiles[key].lab.remove();
       this.tiles[key].remove();
       delete this.tiles[key];
     }
@@ -1860,7 +2055,7 @@ if (window.Android && window.Android.listen) {
       a = this.anchor();
     this.world.style.transform = 'translate(' + a[0] + 'px,' + a[1] + 'px) rotate(' + -c.bearing + 'deg) translate(' + -dx + 'px,' + -dy + 'px) scale(' + k + ')';
     this.markers.forEach(m => m.place());
-    if (Math.abs(dx) > TILE * 0.75 || Math.abs(dy) > TILE * 0.75 || Math.abs(c.zoom - r.zoom) > 0.35 || Math.round(c.zoom) !== r.z && !this.anim) this.layout();
+    if (Math.abs(dx) > TILE * 0.75 || Math.abs(dy) > TILE * 0.75 || Math.abs(c.zoom - r.zoom) > 0.35 || Math.max(2, Math.min(MAXZ, Math.round(c.zoom))) !== r.z && !this.anim) this.layout();
   };
   P.project = function (ll) {
     const c = this.c,
@@ -2486,109 +2681,6 @@ if (window.Android && window.Android.listen) {
       s.fuel = r['2F'] ? A('2F') * 100 / 255 : null;
       s.lph = r['5E'] ? (A('5E') * 256 + A('5E', 1)) / 20 : s.rpm > 300 ? 0.55 + s.load * s.rpm / 1000 * 3.2 : 0;
       if (s.speed < 3) s.gear = 0;else {
-        let best = 1;
-        for (let g = 1; g < K.length; g++) if (Math.abs(s.rpm / s.speed - K[g]) < Math.abs(s.rpm / s.speed - K[best])) best = g;
-        s.gear = best;
-      }
-      return s;
-    }
-  }
-  const CAN_DECODERS = {};
-  const CAN_PID = {
-    speed: '0D',
-    rpm: '0C',
-    load: '04',
-    boost: '0B',
-    coolant: '05',
-    oil: '5C',
-    batt: '42',
-    ext: '46',
-    fuel: '2F',
-    lph: '5E'
-  };
-  class CanSource extends ObdSource {
-    constructor() {
-      super({
-        name: 'CAN TopWay'
-      });
-      this.label = 'CAN TopWay';
-      this.v = {};
-      this.frames = 0;
-      this.tFeed = 0;
-      this.everConnected = false;
-      window.onCar = d => this.feed(d);
-      window.onCanFrame = (what, type, hex) => {
-        this.frames++;
-        const dec = CAN_DECODERS[what.toString(16).toUpperCase().padStart(4, '0') + ':' + type.toString(16).toUpperCase().padStart(2, '0')];
-        if (!dec) return;
-        const d = dec((hex.match(/../g) || []).map(x => parseInt(x, 16)));
-        if (d) this.feed(d);
-      };
-    }
-    connect() {
-      return Promise.resolve();
-    }
-    open() {
-      return Promise.resolve();
-    }
-    startAuto() {}
-    retry() {}
-    lostLink() {}
-    loop() {}
-    readDtcs() {
-      return Promise.reject(new Error("les codes défaut ne passent pas par le bus CAN de l'autoradio"));
-    }
-    badge() {
-      return this.connected ? 'CAN · en ligne' : this.frames ? `CAN · ${this.frames} trames, non décodé` : 'CAN · en attente';
-    }
-    feed(d) {
-      const now = performance.now();
-      if (d.speed != null) {
-        if (this.tS) this.accRaw = (d.speed - this.vS) / Math.max(0.05, (now - this.tS) / 1000);
-        this.vS = d.speed;
-        this.tS = now;
-      }
-      Object.assign(this.v, d);
-      this.tFeed = now;
-      for (const k in d) if (CAN_PID[k] && d[k] != null) this.sup.add(CAN_PID[k]);
-      if (!this.connected) {
-        this.connected = true;
-        this.lost = false;
-        if (this.onBack) this.onBack();
-      }
-    }
-    step(dt) {
-      const s = this.s,
-        v = this.v,
-        k = Math.min(1, dt * 8);
-      if (this.connected && performance.now() - this.tFeed > 6000) {
-        this.connected = false;
-        this.v = {};
-        this.accRaw = 0;
-        this.tS = 0;
-        Object.assign(s, {
-          speed: null,
-          rpm: null,
-          gear: null,
-          boost: null,
-          coolant: null,
-          oil: null,
-          batt: null,
-          soot: null,
-          load: null,
-          lph: null,
-          ext: null,
-          accel: 0,
-          fuel: null
-        });
-        if (this.onLost) this.onLost();
-      }
-      if (!this.connected) return s;
-      for (const f of ['speed', 'rpm']) s[f] = v[f] == null ? null : s[f] == null ? v[f] : s[f] + (v[f] - s[f]) * k;
-      s.accel += (this.accRaw - s.accel) * Math.min(1, dt * 4);
-      for (const f of ['boost', 'load', 'coolant', 'oil', 'batt', 'ext', 'fuel', 'soot']) s[f] = v[f] != null ? v[f] : null;
-      s.lph = v.lph != null ? v.lph : null;
-      if (v.gear != null) s.gear = v.gear;else if (s.speed == null || s.rpm == null) s.gear = null;else if (s.speed < 3) s.gear = 0;else {
         let best = 1;
         for (let g = 1; g < K.length; g++) if (Math.abs(s.rpm / s.speed - K[g]) < Math.abs(s.rpm / s.speed - K[best])) best = g;
         s.gear = best;
@@ -4636,7 +4728,7 @@ if (window.Android && window.Android.listen) {
   function setObdUi() {
     const obd = source instanceof ObdSource,
       live = obd && source.connected;
-    $('obdBtn').textContent = source instanceof CanSource ? source.badge() : live ? 'OBD · ' + source.label : obd ? source.everConnected ? 'OBD · reconnexion…' : 'OBD · recherche…' : source === sim ? 'SIM · connecter OBD' : 'Connecter OBD';
+    $('obdBtn').textContent = live ? 'OBD · ' + source.label : obd ? source.everConnected ? 'OBD · reconnexion…' : 'OBD · recherche…' : source === sim ? 'SIM · connecter OBD' : 'Connecter OBD';
     $('obdBtn').classList.toggle('live', live);
     $('launchBtn').hidden = source !== sim;
     $('launchBtn').textContent = perf.mode === 'banc' ? 'Lancer un banc simulé' : 'Lancer un essai simulé';
@@ -4658,10 +4750,6 @@ if (window.Android && window.Android.listen) {
     return hello;
   }
   $('obdBtn').addEventListener('click', async () => {
-    if (window.JARVIS_TOPWAY) {
-      window.Android.menu();
-      return;
-    }
     if (source instanceof ObdSource && source.connected) {
       say(`Connecté à ${source.label}, ${source.sup.size} données disponibles.`);
       return;
@@ -4678,27 +4766,26 @@ if (window.Android && window.Android.listen) {
         id: obd.link.id,
         name: obd.link.name
       });
-      say(hello() + (NATIVE ? " Je m'y reconnecterai tout seul aux prochains démarrages." : ''));
+      say(hello() + (NATIVE || window.JARVIS_TOPWAY ? " Je m'y reconnecterai tout seul aux prochains démarrages." : ''));
     } catch (e) {
       if (source instanceof ObdSource && !source.connected && !source.lost) source.startAuto();
       setObdUi();
-      say(e.name === 'NotFoundError' || /cancel|annul/i.test(e.message) ? 'Connexion annulée.' : e.name === 'SecurityError' || /permission|policy|disallow|not allowed/i.test(e.message) ? NATIVE ? "J'ai besoin de l'autorisation Bluetooth, monsieur. Acceptez-la quand Android la demande." : 'Le Bluetooth est bloqué dans cette prévisualisation. Il fonctionnera depuis la version installée sur la tablette.' : 'Connexion impossible : ' + e.message);
+      say(e.name === 'NotFoundError' || /cancel|annul/i.test(e.message) ? 'Connexion annulée.' : e.name === 'SecurityError' || /permission|policy|disallow|not allowed/i.test(e.message) ? NATIVE ? "J'ai besoin de l'autorisation Bluetooth, monsieur. Acceptez-la quand Android la demande." : window.JARVIS_TOPWAY ? "J'ai besoin de l'autorisation Bluetooth et de la localisation, monsieur. Acceptez-les quand Android les demande." : 'Le Bluetooth est bloqué dans cette prévisualisation. Il fonctionnera depuis la version installée sur la tablette.' : 'Connexion impossible : ' + e.message);
     }
   });
-  if (window.JARVIS_TOPWAY) {
-    const can = window.JARVIS_CAN = new CanSource();
-    adoptObd(can);
-    can.onLost = () => {
-      setObdUi();
-      say('Je ne reçois plus rien du bus CAN, monsieur.');
-    };
-    can.onBack = () => {
-      const first = !can.everConnected;
-      can.everConnected = true;
-      setObdUi();
-      say(first ? `Liaison établie avec le bus CAN de l'autoradio. ${can.sup.size} données disponibles.` : 'Liaison CAN rétablie.');
-    };
-    setInterval(setObdUi, 2000);
+  if (window.JARVIS_TOPWAY && navigator.bluetooth && navigator.bluetooth.knownDevice) {
+    const saved = store.get('obdDevice', null);
+    if (saved && saved.id) {
+      const link = new WebBleLink();
+      link.dev = navigator.bluetooth.knownDevice(saved.id, saved.name);
+      link.id = saved.id;
+      link.name = saved.name || 'OBD';
+      link.dev.addEventListener('gattserverdisconnected', () => link.onLost && link.onLost());
+      const obd = new ObdSource(link);
+      obd.label = saved.name || 'OBD';
+      adoptObd(obd);
+      obd.startAuto();
+    }
   }
   if (NATIVE) {
     const saved = store.get('obdDevice', null);
@@ -5822,7 +5909,7 @@ if (window.Android && window.Android.listen) {
     }
     if (/mode demo|simulation/.test(t)) {
       if (source instanceof ObdSource && source.connected) return "L'OBD est connecté, je reste sur les vraies données.";
-      source = source === sim ? window.JARVIS_CAN || none : sim;
+      source = source === sim ? none : sim;
       setObdUi();
       return source === sim ? pick(['Mode démo, monsieur. Je simule le trajet ; l\'illusion est plutôt réussie, si je puis dire.', 'Démonstration lancée, monsieur. Rien de ce que vous voyez n\'est réel, mais tout est impeccable.']) : pick(['Fin de la démonstration, monsieur.', 'Démo terminée. J\'attends la vraie voiture, monsieur.']);
     }
@@ -6194,7 +6281,7 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
       n = navInfo(),
       v = musicView();
     return {
-      source: source === sim ? 'simulation (données de démonstration)' : source instanceof CanSource ? source.connected ? 'bus CAN de l\'autoradio connecté' : 'bus CAN de l\'autoradio, aucune donnée reçue pour l\'instant' : source instanceof ObdSource ? source.connected ? 'OBD connecté à ' + source.label : 'OBD déconnecté, reconnexion en cours' : 'aucune (adaptateur OBD non connecté)',
+      source: source === sim ? 'simulation (données de démonstration)' : source instanceof ObdSource ? source.connected ? 'OBD connecté à ' + source.label : 'OBD déconnecté, reconnexion en cours' : 'aucune (adaptateur OBD non connecté)',
       vitesse_kmh: r0(s.speed),
       regime_tr_min: r0(s.rpm),
       rapport: s.gear,
@@ -6597,7 +6684,7 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
     const s = S(),
       n = navInfo(),
       d = new Date();
-    const src = source === sim ? 'simulation' : source instanceof CanSource ? source.connected ? 'bus CAN de l\'autoradio connecté' : 'bus CAN de l\'autoradio, aucune donnée reçue pour l\'instant' : source instanceof ObdSource ? source.connected ? 'OBD connecté' : 'OBD déconnecté' : 'OBD non connecté';
+    const src = source === sim ? 'simulation' : source instanceof ObdSource ? source.connected ? 'OBD connecté' : 'OBD déconnecté' : 'OBD non connecté';
     return `[Contexte : ${d.toLocaleDateString('fr-FR', {
       weekday: 'long',
       day: 'numeric',
@@ -6845,7 +6932,7 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
     const cards = [];
     if (w) cards.push(weatherCard(w));
     cards.push(`<div class="hgrid">
-    <div><span class="label">Voiture</span><b>${esc(source === sim ? 'Démo' : source instanceof CanSource ? source.connected ? 'CAN connecté' : 'CAN en attente' : source instanceof ObdSource && source.connected ? 'OBD connecté' : 'OBD en attente')}</b></div>
+    <div><span class="label">Voiture</span><b>${esc(source === sim ? 'Démo' : source instanceof ObdSource && source.connected ? 'OBD connecté' : 'OBD en attente')}</b></div>
     <div data-state="${st.dpf(s.soot, s.regen)[0]}"><span class="label">FAP</span><b style="color:var(--st)">${fr(s.soot)} %</b></div>
     <div data-state="${u ? u.s.state : 'ok'}"><span class="label">${esc(u ? u.it.name : 'Entretien')}</span><b style="color:var(--st);font-size:17px">${esc(u ? u.s.due : 'à jour')}</b></div>
     <div><span class="label">Dernier trajet</span><b style="font-size:17px">${last ? fr(last.dist, 1) + ' km · ' + fr(last.l100, 1) + ' L/100' : '—'}</b></div></div>`);
