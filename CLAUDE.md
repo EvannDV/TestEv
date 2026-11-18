@@ -102,6 +102,17 @@ en v2.2), aucune n'a changé : c'est un envoi au démarrage, pas un flux en dire
 0507 t00    FE FE FE FE 08 FE 09 FE FE 08   (hypothèse : radars, FE = rien)
 ```
 
+Capture n°2 (18 nov., écoute v3, moteur allumé à 00:05, « 2000 TR/MIN » à 00:17, « PORTE »
+à 00:30 ; volant et rouler non faits) :
+- Rien ne réagit au régime : **pas de régime en flux**. Vitesse pas encore testée (pas roulé).
+- `0505 t00` : 00 -> 40 -> 00 à 00:28-00:29, juste avant « PORTE » : sans doute une porte
+  (0x40 = ouverte). À confirmer.
+- Trois compteurs montent lentement ensemble (environ 1 toutes les 30 s, moteur froid) :
+  `t13` octet 4 (0F à la 1re capture, puis 15, 16, 17), `t14` octet 8 (1C, puis 21, 22),
+  `t15` octet 8 (1F, puis 24, 25 ; toujours t14 + 3). Hypothèse : températures en hausse
+  (eau, huile ?), en °C directs. À vérifier moteur chaud (devrait se stabiliser vers 80-90).
+- `tC2` : 1A 08 11 04 39 (04 33 à la 1re capture) : sans doute la date et l'heure.
+
 L'hypothèse « protocole Raise VW » faite avant de connaître la voiture est abandonnée :
 c'est une Alfa. Le protocole du boîtier reste à identifier à partir des trames.
 
@@ -147,13 +158,20 @@ Pour publier une version : monter `VERSION_CODE` et `VERSION_NAME`, `build.sh`, 
 **Ne marche que si l'APK est signé avec la même clé** : la clé n'existe que dans la session
 qui l'a créée (empreinte SHA-256 `75a2d20d…12e9c6`). Jamais testé sur l'autoradio.
 
+## Voix (v2.3)
+
+Le WebView expose un `speechSynthesis` muet : `shim.js` le remplace **toujours** dans l'appli
+(`Android.say`). Le micro passe par `SpeechRecognizer` d'Android (`SrListener.java`, exposé en
+`webkitSpeechRecognition`), ce qui demande l'appli Google ou un autre service de
+reconnaissance sur l'autoradio. Le Diagnostic affiche les lignes VOIX et MICRO.
+
 ## Où on en est
 
 1. Fait : portage v2.0, mises à jour intégrées v2.1, écoute CAN v3 (v2.2) avec journal des
    changements, octets modifiés entre crochets, boutons pour marquer les actions.
-2. **En attente de l'utilisateur** : photo du journal de l'écoute v3, moteur tournant, en
-   touchant un bouton avant chaque action ; photo de l'appli voiture d'origine de
-   l'autoradio (ce qu'elle affiche en direct = ce que le boîtier CAN sait donner).
+2. **En attente de l'utilisateur** : retour sur la voix v2.3 (et lignes VOIX/MICRO du
+   Diagnostic si ça ne marche pas) ; écoute v3 en **roulant** et **moteur chaud** ; photo de
+   l'appli voiture d'origine de l'autoradio.
 3. Ensuite : remplir `CAN_DECODERS`. Si aucune donnée moteur n'arrive en flux, conseiller de
    garder l'OBDLink pour le moteur (plutôt que d'interroger le bus à l'aveugle).
 4. Si une trame n'arrive que sur demande : trouver le format de `write` utilisé par

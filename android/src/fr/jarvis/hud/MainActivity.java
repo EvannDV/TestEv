@@ -12,6 +12,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.view.WindowManager;
@@ -19,6 +21,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,6 +39,9 @@ public class MainActivity extends Activity {
     private WebView web;
     private TextToSpeech tts;
     private boolean ttsReady;
+    private String ttsInfo = "en attente";
+    private SpeechRecognizer sr;
+    private int pendingListen;
     private TwBus bus;
     private final JarvisChromeClient chrome = new JarvisChromeClient();
     private final Updater updater = new Updater(this);
@@ -45,8 +53,11 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         tts = new TextToSpeech(this, status -> {
-            if (status != TextToSpeech.SUCCESS) return;
-            tts.setLanguage(Locale.FRENCH);
+            if (status != TextToSpeech.SUCCESS) { ttsInfo = "aucun moteur de synthese vocale (statut " + status + ")"; toast("Jarvis ne peut pas parler : aucun moteur de synthèse vocale sur l'autoradio."); return; }
+            int lang = tts.setLanguage(Locale.FRANCE);
+            if (lang < TextToSpeech.LANG_AVAILABLE) lang = tts.setLanguage(Locale.FRENCH);
+            ttsInfo = "moteur " + tts.getDefaultEngine() + ", francais " + (lang >= TextToSpeech.LANG_AVAILABLE ? "OK" : "ABSENT (" + lang + ")");
+            if (lang < TextToSpeech.LANG_AVAILABLE) toast("Aucune voix française installée : Paramètres Android > Langue et saisie > Synthèse vocale.");
             tts.setOnUtteranceProgressListener(new TtsDone(this));
             ttsReady = true;
         });
@@ -74,6 +85,11 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] results) {
+        if (code == 2) { // micro
+            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) listen(pendingListen);
+            else { toast("Jarvis a besoin du micro pour vous entendre."); srEvent(pendingListen, "error", "not-allowed"); srEvent(pendingListen, "end", ""); }
+            return;
+        }
         start();
     }
 
@@ -118,6 +134,8 @@ public class MainActivity extends Activity {
         try {
             sb.append("WEBVIEW: ").append(WebSettings.getDefaultUserAgent(this)).append("\n\n");
         } catch (Throwable t) { sb.append("WEBVIEW: ").append(t).append("\n\n"); }
+        sb.append("VOIX: ").append(ttsInfo).append("\nMICRO: reconnaissance vocale ")
+                .append(SpeechRecognizer.isRecognitionAvailable(this) ? "disponible" : "ABSENTE").append("\n\n");
         sb.append("ERREURS JS: ").append(chrome.errors.length() == 0 ? "aucune" : "\n" + chrome.errors).append("\n\n");
         sb.append("Android ").append(Build.VERSION.RELEASE).append(" (API ").append(Build.VERSION.SDK_INT).append(")\n");
         sb.append("Fabricant: ").append(Build.MANUFACTURER).append(" / ").append(Build.BRAND).append('\n');
@@ -181,6 +199,54 @@ public class MainActivity extends Activity {
         else ttsDone(String.valueOf(id));
     }
 
+    void listen(int id) {
+        runOnUiThread(() -> {
+            if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                pendingListen = id;
+                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 2);
+                return;
+            }
+            if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+                toast("Pas de reconnaissance vocale sur cet autoradio : installe l'appli Google (Play Store), puis réessaie.");
+                srEvent(id, "error", "not-available");
+                srEvent(id, "end", "");
+                return;
+            }
+            if (ttsReady) tts.stop();
+            if (sr == null) sr = SpeechRecognizer.createSpeechRecognizer(this);
+            sr.cancel();
+            sr.setRecognitionListener(new SrListener(this, id));
+            Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR")
+                    .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                    .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                    .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+            sr.startListening(i);
+        });
+    }
+
+    void stopListen() {
+        runOnUiThread(() -> { if (sr != null) sr.stopListening(); });
+    }
+
+    void srEvent(int id, String type, String text) {
+        runOnUiThread(() -> web.evaluateJavascript("window.__srEvent&&__srEvent(" + id + ",'" + type + "'," + JSONObject.quote(text) + ")", null));
+    }
+
+    void srError(int code) {
+        String why = code == SpeechRecognizer.ERROR_NETWORK || code == SpeechRecognizer.ERROR_NETWORK_TIMEOUT ? "pas d'Internet"
+                : code == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ? "micro non autorisé"
+                : code == SpeechRecognizer.ERROR_AUDIO ? "micro indisponible"
+                : code == SpeechRecognizer.ERROR_NO_MATCH || code == SpeechRecognizer.ERROR_SPEECH_TIMEOUT ? null
+                : "erreur " + code;
+        if (why != null) toast("Reconnaissance vocale : " + why + ".");
+    }
+
+    void toast(String msg) {
+        runOnUiThread(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
+    }
+
     void hush() {
         if (ttsReady) tts.stop();
     }
@@ -207,6 +273,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         timer.removeCallbacksAndMessages(null);
         if (bus != null) bus.close();
+        if (sr != null) sr.destroy();
         if (tts != null) tts.shutdown();
         web.destroy();
         super.onDestroy();

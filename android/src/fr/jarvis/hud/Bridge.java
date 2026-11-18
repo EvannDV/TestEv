@@ -16,4 +16,10 @@ final class Bridge {
 
     @JavascriptInterface
     public void menu() { app.menu(); }
+
+    @JavascriptInterface
+    public void listen(int id) { app.listen(id); }
+
+    @JavascriptInterface
+    public void stopListen() { app.stopListen(); }
 }

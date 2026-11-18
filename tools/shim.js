@@ -42,12 +42,17 @@ if (!window.AbortController) { // fetch ne sait pas s'interrompre ici : abort() 
   };
 }
 
-/* ---------- voix : synthèse vocale d'Android derrière l'API du navigateur ---------- */
-if (window.Android && !window.speechSynthesis) {
+/* ---------- voix : synthèse et reconnaissance vocales d'Android derrière l'API du navigateur ----------
+   Le WebView d'Android expose bien window.speechSynthesis, mais il reste muet : on le remplace
+   toujours dans l'appli, et on ajoute la reconnaissance vocale, absente du WebView. */
+const setGlobal = (name, value) => {
+  try { Object.defineProperty(window, name, { value, writable: true, configurable: true }); } catch (e) { try { window[name] = value; } catch (e2) {} }
+};
+if (window.Android) {
   let seq = 0; const waiting = {};
-  window.SpeechSynthesisUtterance = function (text) { this.text = text; this.lang = 'fr-FR'; this.volume = 1; };
+  setGlobal('SpeechSynthesisUtterance', function (text) { this.text = text; this.lang = 'fr-FR'; this.volume = 1; });
   window.__ttsDone = id => { const u = waiting[id]; delete waiting[id]; if (u && u.onend) u.onend({}); };
-  window.speechSynthesis = {
+  setGlobal('speechSynthesis', {
     paused: false, speaking: false, onvoiceschanged: null,
     getVoices: () => [{ name: 'Android', lang: 'fr-FR', localService: true }],
     speak(u) {
@@ -57,7 +62,23 @@ if (window.Android && !window.speechSynthesis) {
     },
     cancel() { for (const k in waiting) delete waiting[k]; window.Android.hush(); },
     resume() {}, pause() {}
+  });
+}
+if (window.Android && window.Android.listen) {
+  let srSeq = 0; const recs = {};
+  const SR = function () { this.lang = 'fr-FR'; this.interimResults = false; this.continuous = false; this.maxAlternatives = 1; };
+  SR.prototype.start = function () { const id = ++srSeq; recs[id] = this; window.Android.listen(id); };
+  SR.prototype.stop = SR.prototype.abort = function () { window.Android.stopListen(); };
+  window.__srEvent = (id, type, text) => {
+    const r = recs[id]; if (!r) return;
+    if (type === 'start') { if (r.onstart) r.onstart({}); }
+    else if (type === 'partial' || type === 'result') {
+      const res = [[{ transcript: text, confidence: 1 }]]; res[0].isFinal = type === 'result';
+      if (r.onresult) r.onresult({ results: res, resultIndex: 0 });
+    } else if (type === 'error') { if (r.onerror) r.onerror({ error: text }); }
+    else if (type === 'end') { delete recs[id]; if (r.onend) r.onend({}); }
   };
+  setGlobal('SpeechRecognition', SR); setGlobal('webkitSpeechRecognition', SR);
 }
 
 /* ---------- carte 2D en tuiles images, avec l'interface de MapLibre utilisée par Jarvis ---------- */
