@@ -78,6 +78,30 @@ Les applis système reçoivent les données via la classe cachée `android.tw.jo
   `0501` arg1=38 arg2=2 obj=`00 00` (3 changements), `0506` obj=`00 00 1C 02`, `0505`, `0202`.
 - Sur `0501` : `arg1` = type de trame du boîtier CAN, `arg2` = longueur, `obj` = `byte[]`.
 
+Capture du 18 nov. 2026 (écoute v1.4+, état du moteur inconnu, aucune action signalée) :
+chaque trame n'est arrivée **qu'une fois** (« recus 8 » = 8 abonnements en double, corrigé
+en v2.2), aucune n'a changé : c'est un envoi au démarrage, pas un flux en direct.
+
+```
+0202        6 0                     0204   0 2570 puis 1 2570
+0501 t13    FF FF 01 0F 03 12 42 FF FF FF
+0501 t14    00 36 26 00 05 21 03 1C 00 03
+0501 t15    00 33 10 02 F3 44 DA 1F 01 DA
+0501 t26    00 00
+0501 t48    00 00 FF FF FF FF 00 00 ... 00
+0501 t71    B9 F0 BF 00          (lecture photo incertaine)
+0501 t72    00 00 D5 55 57 07 13 01
+0501 t76    00 24 08 00
+0501 t79    00 00 00 00 00 00 00 00
+0501 t94    05
+0501 tC1    A9 A0 02
+0501 tC2    1A 08 11 04 33 00 00 00 00 00   (hypothèse : date/heure, 1A = 26 ; 08 ou 0B ?)
+0501 tFF    C8
+0505 t00    00 puis 40 puis 00
+0506 t00    00 00 1C 02
+0507 t00    FE FE FE FE 08 FE 09 FE FE 08   (hypothèse : radars, FE = rien)
+```
+
 L'hypothèse « protocole Raise VW » faite avant de connaître la voiture est abandonnée :
 c'est une Alfa. Le protocole du boîtier reste à identifier à partir des trames.
 
@@ -125,11 +149,13 @@ qui l'a créée (empreinte SHA-256 `75a2d20d…12e9c6`). Jamais testé sur l'aut
 
 ## Où on en est
 
-1. Fait : portage v2.0 ci-dessus, poussé sur `main`.
-2. **En attente de l'utilisateur** : photo de la v2.0 sur l'autoradio (et du bandeau rouge
-   ou du Diagnostic s'il y a des erreurs) ; photos de l'« Écoute CAN » moteur tournant
-   (volant, porte, 2000 tr/min, rouler).
-3. Ensuite : remplir `CAN_DECODERS` d'après les trames, corriger l'affichage d'après les photos.
+1. Fait : portage v2.0, mises à jour intégrées v2.1, écoute CAN v3 (v2.2) avec journal des
+   changements, octets modifiés entre crochets, boutons pour marquer les actions.
+2. **En attente de l'utilisateur** : photo du journal de l'écoute v3, moteur tournant, en
+   touchant un bouton avant chaque action ; photo de l'appli voiture d'origine de
+   l'autoradio (ce qu'elle affiche en direct = ce que le boîtier CAN sait donner).
+3. Ensuite : remplir `CAN_DECODERS`. Si aucune donnée moteur n'arrive en flux, conseiller de
+   garder l'OBDLink pour le moteur (plutôt que d'interroger le bus à l'aveugle).
 4. Si une trame n'arrive que sur demande : trouver le format de `write` utilisé par
    `com.tw.car` avant d'envoyer quoi que ce soit. **Ne rien envoyer à l'aveugle sur le bus.**
 

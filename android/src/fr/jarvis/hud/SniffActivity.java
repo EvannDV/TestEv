@@ -9,6 +9,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -45,6 +48,8 @@ public class SniffActivity extends Activity {
     private final List<Object> utils = new ArrayList<>();
     private Class<?> twClass;
     private TextView tv;
+    private final List<String> journal = new ArrayList<>();
+    private final long t0 = System.currentTimeMillis();
     private final Handler ui = new Handler(Looper.getMainLooper());
 
     private final Handler sink = new Handler(Looper.getMainLooper(), this::onMessage);
@@ -70,15 +75,45 @@ public class SniffActivity extends Activity {
             if (rows.size() >= 300) return true;
             rows.put(key, r = new Row());
         }
+        long now = System.currentTimeMillis();
+        // abonne plusieurs fois au meme canal : la meme trame arrive en double, on ne la compte qu'une fois
+        if (val.equals(r.last) && now - r.at < 60) return true;
+        r.at = now;
         r.count++;
         if (!val.equals(r.last)) {
             r.changes++;
+            log(key, r.last.isEmpty() ? val + "   (nouveau)" : mark(r.last, val));
             r.prev2 = r.prev1;
             r.prev1 = r.last;
         }
         r.last = val;
         r.hint = hint;
         return true;
+    }
+
+    private String clock() {
+        long t = System.currentTimeMillis() - t0;
+        return String.format(Locale.US, "%02d:%02d.%d", t / 60000, t / 1000 % 60, t / 100 % 10);
+    }
+
+    private void log(String key, String text) {
+        journal.add(0, clock() + "  " + String.format("%-9s", key) + " " + text);
+        while (journal.size() > 80) journal.remove(journal.size() - 1);
+    }
+
+    /** Nouvelle valeur, avec les octets qui ont change entre crochets. */
+    private static String mark(String old, String now) {
+        String[] a = old.split(" "), b = now.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < b.length; i++) {
+            boolean ch = i >= a.length || !a[i].equals(b[i]);
+            sb.append(ch ? "[" + b[i] + "]" : b[i]).append(' ');
+        }
+        return sb.toString().trim();
+    }
+
+    private void action(String name) {
+        journal.add(0, "======== " + clock() + "  " + name + " ========");
     }
 
     /** Decodage provisoire : vide tant que le protocole du boitier n'est pas identifie. */
@@ -96,9 +131,29 @@ public class SniffActivity extends Activity {
         tv.setTextColor(Color.WHITE);
         tv.setPadding(24, 12, 24, 12);
         ScrollView sv = new ScrollView(this);
-        sv.setBackgroundColor(Color.BLACK);
         sv.addView(tv);
-        setContentView(sv);
+        LinearLayout bar = new LinearLayout(this);
+        String[] acts = {"MOTEUR ALLUMÉ", "VOLANT", "PORTE", "2000 TR/MIN", "ROULER", "ARRÊT"};
+        for (String a : acts) {
+            Button bt = new Button(this);
+            bt.setText(a);
+            bt.setTextSize(13);
+            bt.setOnClickListener(v -> action(a));
+            bar.addView(bt);
+        }
+        Button clear = new Button(this);
+        clear.setText("EFFACER");
+        clear.setTextSize(13);
+        clear.setOnClickListener(v -> { rows.clear(); journal.clear(); });
+        bar.addView(clear);
+        HorizontalScrollView hs = new HorizontalScrollView(this);
+        hs.addView(bar);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.BLACK);
+        root.addView(hs);
+        root.addView(sv, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        setContentView(root);
         try {
             setup();
         } catch (Throwable t) {
@@ -214,17 +269,18 @@ public class SniffActivity extends Activity {
     }
 
     private void refresh() {
-        StringBuilder sb = new StringBuilder("ECOUTE TOPWAY v2 — photo de ce tableau apres chaque action\n");
-        sb.append("id  type    recus chgts  dernier  |  avant  |  encore avant\n");
+        StringBuilder sb = new StringBuilder("ECOUTE CAN v3 — touche un bouton AVANT chaque action, puis photo du journal\n");
+        sb.append("\n== JOURNAL (le plus recent en haut ; [xx] = octet qui vient de changer) ==\n");
+        if (journal.isEmpty()) sb.append("(rien pour l'instant)\n");
+        for (int i = 0; i < journal.size() && i < 40; i++) sb.append(journal.get(i)).append('\n');
+        sb.append("\n== TOUTES LES TRAMES ==\nid  type    recus chgts  dernier  |  avant  |  encore avant\n");
         for (Map.Entry<String, Row> e : rows.entrySet()) {
             Row r = e.getValue();
             sb.append(String.format(Locale.US, "%-9s %5d %5d  %s", e.getKey(), r.count, r.changes, r.last));
             if (!r.prev1.isEmpty()) sb.append("  |  ").append(r.prev1);
             if (!r.prev2.isEmpty()) sb.append("  |  ").append(r.prev2);
             sb.append('\n');
-            if (!r.hint.isEmpty()) sb.append("            -> ").append(r.hint).append('\n');
         }
-        if (rows.isEmpty()) sb.append("(aucun message recu pour l'instant)\n");
         sb.append('\n').append(info);
         tv.setText(sb);
         ui.postDelayed(this::refresh, 700);
@@ -247,4 +303,5 @@ public class SniffActivity extends Activity {
 class Row {
     int count, changes;
     String last = "", prev1 = "", prev2 = "", hint = "";
+    long at;
 }
