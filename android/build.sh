@@ -7,8 +7,8 @@ SDK="${ANDROID_HOME:-/opt/android-sdk}"
 BT="$SDK/build-tools/34.0.0"
 JAR="$SDK/platforms/android-34/android.jar"
 OUT=build
-VERSION_CODE=11      # a augmenter a chaque version : c'est ce que compare la mise a jour automatique
-VERSION_NAME=3.0
+VERSION_CODE=12      # a augmenter a chaque version : c'est ce que compare la mise a jour automatique
+VERSION_NAME=3.1
 KS="${KEYSTORE:-jarvis.keystore}"   # a conserver : il faut la meme cle pour mettre a jour l'appli
 
 rm -rf "$OUT" && mkdir -p "$OUT"/{gen,obj,dex,assets}

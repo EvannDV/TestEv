@@ -7,7 +7,7 @@
 <style>body{margin:0}[hidden]{display:none!important}</style>
 <script>
 (function () {
-  var E = ["clamp(28px,3.4vw,44px)","clamp(15px,1.5vw,20px)","clamp(20px,2vw,28px)","clamp(18px,1.9vw,26px)","clamp(64px,11vw,120px)","min(70vh,520px)","clamp(44px,9vw,120px)"];
+  var E = ["clamp(28px,3.4vw,44px)","clamp(15px,1.5vw,20px)","clamp(20px,2vw,28px)","clamp(18px,1.9vw,26px)","clamp(64px,11vw,120px)","min(70vh,520px)"];
   function px(t) {
     var m = /^(-?[\d.]+)(px|vw|vh|vmin|vmax|rem)?$/.exec(t.trim()), w = innerWidth, h = innerHeight;
     if (!m) return NaN;
@@ -44,11 +44,6 @@
   color-scheme:dark;
 }
 /* DNA · Dynamic : mode sport */
-:root[data-dna="D"]{
-  --bg:#070203; --bg-rgb:7,2,3; --bg-glow:#2e0a0f; --panel:#15080a; --panel-2:#0d0406; --panel-rgb:21,8,10; --panel2-rgb:13,4,6;
-  --line:#42161b; --line-hi:#77262d; --acc:#ff4a52; --acc-rgb:255,74,82; --acc-dim:#b3383f;
-  --text:#ffe7e3; --muted:#ab7671; --red:#ff2a8a;
-}
 /* DNA · Natural : mode normal « Grand Tourisme » (noir profond, champagne) */
 :root[data-dna="N"]{
   --bg:#09090a; --bg-rgb:9,9,10; --bg-glow:#151513; --panel:#141416; --panel-2:#0d0d0f; --panel-rgb:20,20,22; --panel2-rgb:13,13,15;
@@ -56,11 +51,6 @@
   --text:#efe9dd; --muted:#8c877d; --ice:#d8c39a; --ok:#7fb98f; --amber:#e0a85a; --red:#e05a4c;
 }
 /* DNA · All-weather : mode pluie */
-:root[data-dna="A"]{
-  --bg:#03070f; --bg-rgb:3,7,15; --bg-glow:#0e2244; --panel:#07111f; --panel-2:#040a14; --panel-rgb:7,17,31; --panel2-rgb:4,10,20;
-  --line:#17324f; --line-hi:#2a5480; --acc:#9ccdff; --acc-rgb:156,205,255; --acc-dim:#4f81b4;
-  --text:#e5f1ff; --muted:#7391b3; --ice:#cfe5ff;
-}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -75,11 +65,6 @@ body::after{content:"";position:fixed;top:0;right:0;bottom:0;left:0;pointer-even
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-
-:root[data-dna="D"] body{background:
-  radial-gradient(ellipse 70% 60% at 28% 30%, var(--bg-glow) 0%, transparent 70%) fixed,
-  repeating-linear-gradient(45deg, rgba(255,255,255,.022) 0 3px, transparent 3px 6px),
-  repeating-linear-gradient(-45deg, rgba(0,0,0,.4) 0 3px, transparent 3px 6px), var(--bg)}
 .app{position:relative;z-index:1;height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;grid-gap:10px;gap:10px}
 .label{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .panel{position:relative;background:linear-gradient(180deg,rgba(var(--panel-rgb),.8),rgba(var(--panel2-rgb),.88));border:1px solid var(--line);min-width:0;min-height:0}
@@ -230,7 +215,6 @@ button{cursor:pointer}
 /* Combiné */
 .cluster{display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:8px 12px 10px}
 .leds{display:grid;grid-template-columns:repeat(15,1fr);grid-gap:4px;gap:4px;height:0;opacity:0;overflow:hidden;padding:0 10%;transition:height .3s,opacity .3s}
-:root[data-dna="D"] .leds{height:10px;opacity:1;margin-top:4px}
 .leds i{border-radius:2px;background:rgba(var(--acc-rgb),.12)}
 .leds i.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .leds i.on.y{background:var(--amber);box-shadow:0 0 8px var(--amber)}
@@ -259,7 +243,6 @@ button{cursor:pointer}
 .mode-tag{font-family:var(--f-mono);font-size:12px;letter-spacing:.3em;fill:var(--acc);text-anchor:middle}
 .ring{fill:none;stroke:var(--acc-dim);stroke-width:1;stroke-dasharray:2 10;opacity:.6;transform-box:view-box;transform-origin:200px 200px;animation:spin 40s linear infinite}
 .ring.rev{stroke-dasharray:30 6 4 6;animation-duration:26s;animation-direction:reverse;opacity:.35}
-:root[data-dna="D"] .ring{animation-duration:14s}
 /* ===== MODE NORMAL (DNA N) : Grand Tourisme, deux cadrans à aiguille ===== */
 .gt-dial,.gt-info{display:none}
 :root[data-dna="N"] body{background:linear-gradient(180deg,#0b0b0c,#050506) fixed}
@@ -308,32 +291,6 @@ button{cursor:pointer}
 .gt-row b small{font-size:12px;color:var(--muted);margin-left:3px}
 /* ===== MODE PLUIE (DNA A) : verre mouillé, radar pluie, distance de sécurité ===== */
 .wx-spd,.wx-col{display:none}
-:root[data-dna="A"]{--ok:#7dffc4;--amber:#ffc35a;--red:#ff6b6b}
-:root[data-dna="A"] body{background:radial-gradient(ellipse 90% 60% at 50% 110%,#0c2340 0%,#030a14 60%) fixed,#030a14}
-:root[data-dna="A"] body::after{display:none}
-:root[data-dna="A"] .panel{background:linear-gradient(180deg,rgba(20,44,78,.42),rgba(6,16,30,.6));border:1px solid rgba(160,210,255,.22);border-radius:16px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.35)}
-:root[data-dna="A"] .panel::before,:root[data-dna="A"] .panel::after{display:none}
-:root[data-dna="A"] .turn,:root[data-dna="A"] .eta{background:rgba(4,12,24,.72);border:1px solid rgba(160,210,255,.25);border-radius:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-:root[data-dna="A"] .icon-btn,:root[data-dna="A"] .btn,:root[data-dna="A"] .badge{border-radius:10px}
-:root[data-dna="A"] .dna{border-radius:10px;overflow:hidden}
-:root[data-dna="A"] .dna button[aria-pressed="true"]{background:linear-gradient(180deg,#bfe4ff,#6fb6f2)}
-:root[data-dna="A"] .drive{grid-template-columns:minmax(0,1.1fr) minmax(0,.95fr) minmax(0,1.15fr);grid-template-areas:"spd col map"}
-:root[data-dna="A"] .drive > .cluster,:root[data-dna="A"] .drive > .engine,:root[data-dna="A"] .limit.lmap{display:none!important}
-:root[data-dna="A"] .drive > .mapp{grid-area:map}
-:root[data-dna="A"] .wx-spd{display:flex;grid-area:spd;flex-direction:column;padding:14px 16px;min-height:0;overflow:hidden}
-:root[data-dna="A"] .wx-spd>*+*{
-  margin-top:10px !important;
-}
-:root[data-dna="A"] .wx-spd>[hidden]:first-child+*{
-  margin-top:0 !important;
-}
-:root[data-dna="A"] .wx-col{display:flex;grid-area:col;flex-direction:column;min-height:0}
-:root[data-dna="A"] .wx-col>*+*{
-  margin-top:10px !important;
-}
-:root[data-dna="A"] .wx-col>[hidden]:first-child+*{
-  margin-top:0 !important;
-}
 .wx-chips{display:flex;margin-right:-8px;margin-bottom:-8px;flex-wrap:wrap}
 .wx-chips>*{
   margin-right:8px;
@@ -400,32 +357,14 @@ button{cursor:pointer}
 .wx-mini b small{font-size:12px;color:var(--muted);margin-left:2px;font-weight:400}
 @media (max-height:620px){.wx-bars{height:48px}.wx-mini b{font-size:18px}.wx-mini div{padding:6px 8px}.wx-sign{width:56px;height:56px;font-size:21px;border-width:6px}}
 /* ===== MODE SPORT (DNA D) : combiné course, rapport géant, rampe LED, effets ===== */
-:root[data-dna="D"] .drive{grid-template-columns:1.6fr .78fr 1fr}
-:root[data-dna="D"] .panel{background:linear-gradient(180deg,rgba(var(--panel-rgb),.62),rgba(var(--panel2-rgb),.78))}
-:root[data-dna="D"] .panel::before,:root[data-dna="D"] .panel::after{width:20px;height:20px;border-width:3px;filter:drop-shadow(0 0 6px var(--acc))}
-:root[data-dna="D"] .cluster{box-shadow:inset 0 0 calc(20px + var(--rev,0) * 60px) rgba(var(--acc-rgb),calc(.1 + var(--rev,0) * .35));border-color:rgba(var(--acc-rgb),.55)}
 .segs{display:none}
-:root[data-dna="D"] .segs{display:inline}
-:root[data-dna="D"] .rpm-arc,:root[data-dna="D"] #rpmTrack,:root[data-dna="D"] #rpmRed{display:none}
 .seg-r{fill:none;stroke-width:15;stroke:rgba(var(--acc-rgb),.13)}
 .seg-r.on{stroke:#3cff9e}.seg-r.on.y{stroke:#ffd23f}.seg-r.on.r{stroke:var(--acc)}
 .segs.flash .seg-r.on{animation:ledflash .12s steps(2) infinite}
 .gear-big{display:none;font-family:var(--f-display);font-weight:700;font-style:italic;font-size:150px;fill:var(--text);text-anchor:middle;dominant-baseline:central;transform-box:fill-box;transform-origin:center}
-:root[data-dna="D"] .gear-big{display:inline}
 .gear-big.slam{animation:slam .38s cubic-bezier(.2,1.5,.4,1)}
 .gear-big.hi{fill:#fff;filter:drop-shadow(3px 0 rgba(0,240,255,.75)) drop-shadow(-3px 0 rgba(255,30,60,.9)) drop-shadow(0 0 14px var(--acc))}
 @keyframes slam{0%{transform:scale(1.8) skewX(-12deg);opacity:.15;filter:blur(8px)}60%{transform:scale(.94)}100%{transform:scale(1);opacity:1;filter:none}}
-:root[data-dna="D"] #gear,:root[data-dna="D"] .gear-box,:root[data-dna="D"] #modeTag,:root[data-dna="D"] #shift{display:none}
-:root[data-dna="D"] #spd{font-size:56px;font-style:italic;transform:translateY(78px)}
-:root[data-dna="D"] #kmhUnit{transform:translateY(76px)}
-:root[data-dna="D"] #rpmTxt{transform:translateY(76px);font-size:17px}
-:root[data-dna="D"] .boost-val,:root[data-dna="D"] .tv,:root[data-dna="D"] .stat b,:root[data-dna="D"] .turn b,:root[data-dna="D"] .ptime{font-style:italic}
-:root[data-dna="D"] .leds{height:14px;grid-gap:5px;gap:5px}
-:root[data-dna="D"] .boost.hot{border-color:var(--acc);box-shadow:inset 0 0 40px rgba(var(--acc-rgb),.35),0 0 24px rgba(var(--acc-rgb),.35)}
-:root[data-dna="D"] .boost.hot .boost-val{color:#fff;text-shadow:0 0 14px var(--acc),0 0 36px var(--acc)}
-:root[data-dna="D"] .boost.hot .boost-val::after{content:" BOOST";font-size:15px;letter-spacing:.3em;color:var(--acc);animation:blink .5s steps(2) infinite}
-:root[data-dna="D"] .top::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;background:repeating-linear-gradient(115deg,var(--acc) 0 26px,transparent 26px 34px,#fff 34px 40px,transparent 40px 52px);background-size:200px 100%;animation:stripe 1.2s linear infinite;opacity:.85}
-:root[data-dna="D"] .top{position:relative}
 @keyframes stripe{to{background-position:200px 0}}
 .launch{position:absolute;top:30px;left:16px;z-index:3;display:flex;align-items:baseline;padding:6px 12px;border:1px solid var(--acc);background:rgba(var(--bg-rgb),.75);font-family:var(--f-display);box-shadow:0 0 18px rgba(var(--acc-rgb),.4)}
 .launch>*+*{
@@ -467,7 +406,6 @@ button{cursor:pointer}
 .seg i.on.hi{background:var(--amber);box-shadow:0 0 6px var(--amber)}
 .scale{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:var(--muted)}
 #spark{width:100%;height:44px;display:block}
-:root[data-dna="D"] #spark{height:64px}
 
 .tiles{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;grid-gap:10px;gap:10px;min-height:0}
 .tile{padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between;--st:var(--ok)}
@@ -940,7 +878,6 @@ button{cursor:pointer}
   .tiles,.engine{grid-gap:8px;gap:8px}
   .tile .state{font-size:9px;padding:1px 5px}
   #spark{height:34px}
-  :root[data-dna="D"] #spark{height:46px}
   .boost{padding:10px 12px}
   .boost>*+*{
     margin-top:6px !important;
@@ -1033,23 +970,10 @@ button{cursor:pointer}
 @keyframes redline{50%{opacity:.3}}
 
 /* Transition entre modes DNA */
-.modefx{position:fixed;top:0;right:0;bottom:0;left:0;z-index:28;pointer-events:none;display:none;overflow:hidden}
-.modefx.on{display:block;animation:mfBg 1.7s ease forwards}
 @keyframes mfBg{0%{background:rgba(var(--bg-rgb),0)}18%,72%{background:rgba(var(--bg-rgb),.78)}100%{background:rgba(var(--bg-rgb),0)}}
-.mf-text{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--f-display);font-weight:700;font-size:var(--jx6);letter-spacing:.18em;color:var(--acc);text-shadow:0 0 30px rgba(var(--acc-rgb),.8);white-space:nowrap;opacity:0}
-.mD .mf-text{font-style:italic}
-.modefx.on .mf-text{animation:mfText 1.7s ease forwards}
 @keyframes mfText{0%{opacity:0;letter-spacing:.6em;filter:blur(10px)}25%{opacity:1;letter-spacing:.18em;filter:blur(0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.06)}}
-.mf-slashes,.mf-curtain,.mf-scan{position:absolute;display:none}
-.mD .mf-slashes{display:block;top:0;right:0;bottom:0;left:0}
-.mf-slashes i{position:absolute;top:-20%;bottom:-20%;left:-40%;width:24%;background:var(--acc);transform:skewX(-24deg);box-shadow:0 0 50px var(--acc);animation:slash .85s cubic-bezier(.7,0,.3,1) forwards}
-.mf-slashes i:nth-child(2){width:7%;opacity:.6;animation-delay:.09s}
-.mf-slashes i:nth-child(3){width:2.5%;opacity:.45;animation-delay:.18s}
 @keyframes slash{from{left:-40%}to{left:135%}}
-.mA .mf-curtain{display:block;top:-10%;right:0;bottom:-10%;left:0;background:repeating-linear-gradient(100deg, transparent 0 13px, rgba(var(--acc-rgb),.45) 13px 14px);
-  -webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);animation:curtain 1.5s ease-in forwards}
 @keyframes curtain{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
-.mN .mf-scan{display:block;left:0;right:0;top:0;height:3px;background:var(--acc);box-shadow:0 0 30px 10px rgba(var(--acc-rgb),.6);animation:scan 1.2s ease-in-out forwards}
 @keyframes scan{from{top:0}to{top:100%}}
 
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1116,9 +1040,11 @@ button{cursor:pointer}
   :root[data-dna="N"] .drive{grid-template-areas:none}
   :root[data-dna="N"] .drive > *{grid-area:auto!important}
   .gt-dial{height:380px}
-  :root[data-dna="A"] .drive{grid-template-areas:none}
   .wx-spd{min-height:520px}
 }
+.panel,.top,.controls{contain:layout style}
+#fxBack,#fxFront,.dna,#modeFx{display:none!important}
+.ring,.core i:nth-child(1),.holo::before{animation:none!important}
 </style>
 
 <div class="app">
@@ -1829,13 +1755,13 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     box.innerHTML = '';
     this.world = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:0;height:0;will-change:transform');
     this.tileBox = css(document.createElement('div'), 'position:absolute;left:0;top:0');
-    this.canvas = css(document.createElement('canvas'), 'position:absolute;pointer-events:none');
+    this.canvas = css(document.createElement('canvas'), 'position:absolute;left:0;top:0;pointer-events:none');
     this.markBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:0;height:0');
     this.labBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;opacity:.85');
     this.world.appendChild(this.tileBox);
     this.world.appendChild(this.labBox);
-    this.world.appendChild(this.canvas);
     box.appendChild(this.world);
+    box.appendChild(this.canvas);
     box.appendChild(this.markBox);
     this.resize();
     setTimeout(() => {
@@ -1879,8 +1805,8 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     if (!(id in this.data)) return null;
     return {
       setData: d => {
-        this.data[id] = (d.features || []).map(f => f.geometry.coordinates);
-        this.layout();
+        this.data[id] = (d.features || []).map(f => f.geometry.coordinates.map(p => [lon2x(p[0], 0) / TILE, lat2y(p[1], 0) / TILE]));
+        this.draw();
       }
     };
   };
@@ -1975,21 +1901,36 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       this.tiles[key].remove();
       delete this.tiles[key];
     }
-    this.draw();
     this.frame();
   };
   P.draw = function () {
-    const r = this.ref;
-    if (!r) return;
-    const half = Math.ceil(this.rad / Math.pow(2, this.c.zoom - r.z)) + TILE,
-      cv = this.canvas;
-    if (cv.width !== half * 2) {
-      cv.width = cv.height = half * 2;
+    const cv = this.canvas,
+      W = this.w,
+      H = this.h;
+    if (cv.width !== W || cv.height !== H) {
+      cv.width = W;
+      cv.height = H;
     }
-    css(cv, 'position:absolute;pointer-events:none;left:' + -half + 'px;top:' + -half + 'px');
     const g = cv.getContext('2d');
-    g.clearRect(0, 0, cv.width, cv.height);
+    if (!this.data.route.length && !this.data.alts.length) {
+      if (this.drawn) {
+        g.clearRect(0, 0, W, H);
+        this.drawn = false;
+      }
+      return;
+    }
+    this.drawn = true;
+    g.clearRect(0, 0, W, H);
     g.lineCap = g.lineJoin = 'round';
+    const c = this.c,
+      sc = TILE * Math.pow(2, c.zoom),
+      a = this.anchor(),
+      th = -c.bearing / R2D,
+      co = Math.cos(th),
+      si = Math.sin(th);
+    const cx0 = lon2x(c.lon, 0) / TILE,
+      cy0 = lat2y(c.lat, 0) / TILE,
+      M = 200;
     const col = (id, d) => {
       const v = this.getLayer(id).paint['line-color'];
       return typeof v === 'string' && v ? v : d;
@@ -1997,50 +1938,53 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     const path = line => {
       g.beginPath();
       let pen = false,
-        lx = 0,
-        ly = 0;
+        lx = -1e9,
+        ly = -1e9;
       for (let i = 0; i < line.length; i++) {
-        const x = lon2x(line[i][0], r.z) - r.cx + half,
-          y = lat2y(line[i][1], r.z) - r.cy + half;
-        if (pen && Math.abs(x - lx) < 1.5 && Math.abs(y - ly) < 1.5 && i < line.length - 1) continue;
-        const inside = x > -half && x < 3 * half && y > -half && y < 3 * half;
-        if (!inside) {
+        const dx = (line[i][0] - cx0) * sc,
+          dy = (line[i][1] - cy0) * sc,
+          x = a[0] + dx * co - dy * si,
+          y = a[1] + dx * si + dy * co;
+        if (x < -M || x > W + M || y < -M || y > H + M) {
+          if (pen) g.lineTo(x, y);
           pen = false;
           lx = x;
           ly = y;
           continue;
         }
+        if (pen && Math.abs(x - lx) < 1.5 && Math.abs(y - ly) < 1.5 && i < line.length - 1) continue;
         if (pen) g.lineTo(x, y);else {
-          g.moveTo(x, y);
+          if (lx > -1e8) {
+            g.moveTo(lx, ly);
+            g.lineTo(x, y);
+          } else g.moveTo(x, y);
           pen = true;
         }
         lx = x;
         ly = y;
       }
     };
-    const k = Math.pow(2, this.c.zoom - r.z),
-      w = px => px / k;
-    g.setLineDash([w(10), w(10)]);
+    g.setLineDash([10, 10]);
     g.globalAlpha = 0.55;
     g.strokeStyle = col('alts', '#888');
-    g.lineWidth = w(5);
+    g.lineWidth = 5;
     this.data.alts.forEach(l => {
       path(l);
       g.stroke();
     });
     g.setLineDash([]);
     this.data.route.forEach(l => {
+      path(l);
       g.globalAlpha = 0.3;
       g.strokeStyle = col('route', '#4fe3ff');
-      g.lineWidth = w(18);
-      path(l);
+      g.lineWidth = 18;
       g.stroke();
       g.globalAlpha = 1;
-      g.lineWidth = w(8);
+      g.lineWidth = 8;
       g.stroke();
       g.globalAlpha = 0.9;
       g.strokeStyle = '#fff';
-      g.lineWidth = w(2);
+      g.lineWidth = 2;
       g.stroke();
     });
     g.globalAlpha = 1;
@@ -2055,6 +1999,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       a = this.anchor();
     this.world.style.transform = 'translate(' + a[0] + 'px,' + a[1] + 'px) rotate(' + -c.bearing + 'deg) translate(' + -dx + 'px,' + -dy + 'px) scale(' + k + ')';
     this.markers.forEach(m => m.place());
+    this.draw();
     if (Math.abs(dx) > TILE * 0.75 || Math.abs(dy) > TILE * 0.75 || Math.abs(c.zoom - r.zoom) > 0.35 || Math.max(2, Math.min(MAXZ, Math.round(c.zoom))) !== r.z && !this.anim) this.layout();
   };
   P.project = function (ll) {
@@ -2196,10 +2141,25 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     ['--acc', '--acc-rgb', '--acc-dim', '--line', '--line-hi', '--panel-2', '--text', '--muted', '--amber', '--red', '--ok', '--ice', '--bg-rgb'].forEach(k => T[k] = cs.getPropertyValue(k).trim());
   }
   refreshTokens();
+  const fitCache = new WeakMap();
+  let fitEpoch = 0;
+  addEventListener('resize', () => fitEpoch++);
+  document.addEventListener('click', () => fitEpoch++, true);
   function fitCanvas(c) {
+    let fm = fitCache.get(c);
+    const fnow = performance.now();
+    if (!fm || fm.e !== fitEpoch || !fm.w || !fm.h || fnow - fm.t > 2000) {
+      fm = {
+        w: c.clientWidth,
+        h: c.clientHeight,
+        e: fitEpoch,
+        t: fnow
+      };
+      fitCache.set(c, fm);
+    }
     const dpr = devicePixelRatio || 1,
-      w = c.clientWidth,
-      h = c.clientHeight;
+      w = fm.w,
+      h = fm.h;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
@@ -2273,7 +2233,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
         } else {
           const v = Math.max(1, s.speed / 3.6),
             Pw = torqueRef(s.rpm) * s.rpm * Math.PI / 30 * DYNO_EFF * (1 + (Math.random() - .5) * 0.03);
-          const am = (Pw / v - 0.5 * 1.2 * DYNO_CDA * v * v - DYNO_CRR * DYNO_M * 9.81) / DYNO_M;
+          const am = (Pw / v - 0.5 * 1.2 * DYNO_CDA * v * v - DYNO_CRR * DYNO_M * 9.81) / (DYNO_M * dynoLambda(K[3]));
           s.accel = am * 3.6;
           s.speed += s.accel * dt;
           if (s.rpm >= 4650) {
@@ -2643,9 +2603,13 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
         return;
       }
       if (!this.sup.has(pid)) return;
-      const b = this.parse(await this.cmd('01' + pid), pid);
+      const tQ = performance.now(),
+        b = this.parse(await this.cmd('01' + pid), pid);
       if (!b) return;
       this.raw[pid] = b;
+      const tM = (tQ + performance.now()) / 2;
+      if (pid === '0C' && b.length >= 2) dynoSample('rpm', (b[0] * 256 + b[1]) / 4, tM);
+      if (pid === '0D') dynoSample('spd', b[0], tM);
       if (pid === '0D') {
         const now = performance.now();
         if (this.tS) this.accRaw = (b[0] - this.vS) / Math.max(0.05, (now - this.tS) / 1000);
@@ -2657,6 +2621,12 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       const FAST = ['0C', '0D', '0B', '04'],
         SLOW = ['05', '5C', '42', 'RV', '46', '33', '5E', '2F'];
       while (this.connected) {
+        if (dynoBusy()) {
+          await this.read('0C');
+          this.dynI = (this.dynI || 0) + 1;
+          if (this.dynI % 3 === 0) await this.read('0D');
+          continue;
+        }
         for (const p of FAST) await this.read(p);
         await this.read(SLOW[this.slowI++ % SLOW.length]);
       }
@@ -2800,19 +2770,15 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       say: ['Mode pluie, monsieur. Je me suis permis de doubler les distances de sécurité.', 'All-weather. Je surveille le radar pluie, monsieur. Prudence dans les ronds-points.', 'Route mouillée, monsieur. Puis-je suggérer un pied un peu plus léger ?']
     }
   };
-  let dna = store.get('dna', 'N');
+  let dna = 'N';
   function setDna(m, quiet) {
-    dna = m;
-    store.set('dna', m);
-    document.documentElement.dataset.dna = m;
-    document.querySelectorAll('.dna button').forEach(b => b.setAttribute('aria-pressed', b.dataset.dna === m));
-    $('modeTag').textContent = DNA_INFO[m].tag;
-    $('stat3l').textContent = m === 'D' ? 'Pic turbo' : m === 'A' ? 'Dist. sécu.' : 'Charge';
+    if (m !== 'N' && !quiet) say("J'ai désormais un seul style d'affichage, monsieur. Il est taillé pour la fluidité.");
+    dna = 'N';
+    document.documentElement.dataset.dna = 'N';
+    $('modeTag').textContent = DNA_INFO.N.tag;
+    $('stat3l').textContent = 'Charge';
     refreshTokens();
     if (typeof restyleMap === 'function') restyleMap();
-    fx.setMode(m);
-    if (!quiet) modeTransition(m);
-    if (!quiet) say(pick(DNA_INFO[m].say) + (m === 'A' && S().ext != null && S().ext <= 3 ? ' Il fait ' + fr(S().ext) + ' °C, risque de verglas.' : ''));
   }
   document.querySelectorAll('.dna button').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.dna !== dna) setDna(b.dataset.dna);
@@ -3259,6 +3225,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     fxState.flash = Math.max(fxState.flash, strength || 0.6);
   }
   function modeTransition(m) {
+    return;
     if (m === 'D') {
       revSound();
       fxState.burst = 1.8;
@@ -4900,7 +4867,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
   const DYNO_M = 1475,
     DYNO_CDA = 0.61,
     DYNO_CRR = 0.012,
-    DYNO_EFF = 0.85;
+    DYNO_EFF = 0.90;
   const DYNO_REF = [[1000, 170], [1500, 290], [1750, 320], [2500, 320], [3000, 300], [4000, 246], [4500, 205], [5000, 160]];
   function torqueRef(r) {
     if (r <= DYNO_REF[0][0]) return DYNO_REF[0][1];
@@ -4911,117 +4878,293 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     }
     return DYNO_REF[DYNO_REF.length - 1][1];
   }
+  const DYNO_RW = 0.31;
+  const DYNO_LIMIT = 4900;
+  const WHEEL_RPM_PER_KMH = 1000 / 60 / (2 * Math.PI * DYNO_RW);
+  function dynoLambda(rg) {
+    const i = rg / WHEEL_RPM_PER_KMH;
+    return 1.04 + 0.0025 * i * i;
+  }
+  function dynoRho() {
+    const raw = source && source.raw ? source.raw : {},
+      s = S();
+    const p = raw['33'] ? raw['33'][0] : 101.3,
+      t = s && s.ext != null ? s.ext : 15;
+    return p * 1000 / (287.05 * (t + 273.15));
+  }
   const dyno = {
     state: 'idle',
     run: null,
-    last: store.get('dynoLast', null)
+    last: store.get('dynoLast', null),
+    rpm: [],
+    spd: []
   };
   const median = a => {
     const b = [...a].sort((x, y) => x - y);
     return b.length ? b[b.length >> 1] : null;
   };
+  function dynoTorque(r, dr, rg, rho) {
+    const v = r / rg / 3.6,
+      a = dr / rg / 3.6;
+    const Fw = DYNO_M * dynoLambda(rg) * a + 0.5 * rho * DYNO_CDA * v * v + DYNO_CRR * DYNO_M * 9.81;
+    return Fw * v / DYNO_EFF / (r * Math.PI / 30);
+  }
+  const dynoCal = {
+    f: store.get('dynoSpeedCal', []),
+    fix: null,
+    hist: [],
+    n: 0
+  };
+  function dynoCalTick(s) {
+    const g = typeof nav !== 'undefined' && nav.gps;
+    if (!g || g === dynoCal.fix) return;
+    dynoCal.fix = g;
+    const now = performance.now();
+    dynoCal.hist.push({
+      t: now,
+      v: s.speed
+    });
+    while (dynoCal.hist.length && now - dynoCal.hist[0].t > 4000) dynoCal.hist.shift();
+    if (dyno.state === 'run' || g.spd == null || !(g.acc <= 20) || s.speed == null || s.speed < 30 || !(source instanceof ObdSource) || !source.connected) return;
+    const vs = dynoCal.hist.map(h => h.v).filter(v => v != null);
+    if (vs.length < 3 || Math.max(...vs) - Math.min(...vs) > 3) return;
+    const f = s.speed / (g.spd * 3.6);
+    if (!(f > 0.85 && f < 1.15)) return;
+    dynoCal.f.push(+f.toFixed(4));
+    if (dynoCal.f.length > 300) dynoCal.f.shift();
+    if (++dynoCal.n % 10 === 0) store.set('dynoSpeedCal', dynoCal.f);
+  }
+  const dynoSpeedFactor = () => dynoCal.f.length >= 10 ? median(dynoCal.f) : null;
+  const dynoBusy = () => dyno.state === 'armed' || dyno.state === 'run';
   function dynoArm() {
     dyno.state = 'armed';
     dyno.run = null;
+    dyno.rpm = [];
+    dyno.spd = [];
     drawDyno();
   }
-  function dynoTick(s) {
-    if (dyno.state !== 'armed' && dyno.state !== 'run') return;
-    if (s.speed == null || s.rpm == null) return;
-    const now = performance.now(),
-      ratio = s.speed > 12 ? s.rpm / s.speed : null;
-    if (dyno.state === 'armed') {
-      const full = s.load != null ? s.load > 0.8 : s.accel > 2;
-      if (ratio && s.rpm > 1000 && s.rpm < 2200 && full && s.accel > 0.8) {
-        dyno.state = 'run';
-        dyno.run = {
-          ratio,
-          pts: [],
-          t0: now,
-          max: s.rpm
-        };
-      }
-      return;
-    }
-    const R = dyno.run,
-      last = R.pts[R.pts.length - 1];
-    if (!last || last.rpm !== s.rpm || last.v !== s.speed) R.pts.push({
-      t: (now - R.t0) / 1000,
-      rpm: s.rpm,
-      v: s.speed
+  function dynoSample(kind, val, t) {
+    if (!dynoBusy() || val == null || !isFinite(val)) return;
+    const a = kind === 'rpm' ? dyno.rpm : dyno.spd;
+    if (a.length && t <= a[a.length - 1].t) return;
+    a.push({
+      t,
+      x: val
     });
-    R.max = Math.max(R.max, s.rpm);
-    const shifted = ratio == null || Math.abs(ratio / R.ratio - 1) > 0.09;
-    if (shifted || s.rpm < R.max - 120 || s.rpm >= 4700 || now - R.t0 > 25000) dynoFinish();
+    while (a.length && a[0].t < t - 40000) a.shift();
+    if (kind === 'rpm') dynoCheck(t);
   }
-  function dynoFinish() {
-    const R = dyno.run;
-    dyno.run = null;
-    const pts = R.pts.filter(p => p.rpm <= R.max + 1);
-    const span = pts.length ? Math.max(...pts.map(p => p.rpm)) - Math.min(...pts.map(p => p.rpm)) : 0;
-    if (pts.length < 8 || span < 1200) {
-      dyno.state = 'armed';
-      say("Mesure trop courte, monsieur. En 3e, gardez le pied au plancher de 1 500 jusqu'à 4 500 tours. Le banc reste armé.");
+  function dynoSlope(pts) {
+    const n = pts.length;
+    if (n < 3) return null;
+    let st = 0,
+      sx = 0,
+      stt = 0,
+      stx = 0;
+    const t0 = pts[0].t;
+    pts.forEach(p => {
+      const t = (p.t - t0) / 1000;
+      st += t;
+      sx += p.x;
+      stt += t * t;
+      stx += t * p.x;
+    });
+    const den = n * stt - st * st;
+    return den > 0 ? (n * stx - st * sx) / den : null;
+  }
+  function rpmAt(t) {
+    const R = dyno.rpm;
+    if (!R.length || t < R[0].t || t > R[R.length - 1].t) return null;
+    let lo = 0,
+      hi = R.length - 1;
+    while (hi - lo > 1) {
+      const m = lo + hi >> 1;
+      if (R[m].t <= t) lo = m;else hi = m;
+    }
+    const a = R[lo],
+      b = R[hi];
+    return b.t === a.t ? a.x : a.x + (b.x - a.x) * (t - a.t) / (b.t - a.t);
+  }
+  function dynoRatios(t0, t1) {
+    const out = [];
+    dyno.spd.forEach(s => {
+      if (s.t >= t0 && s.t <= t1 && s.x >= 15) {
+        const r = rpmAt(s.t);
+        if (r) out.push(r / s.x);
+      }
+    });
+    return out;
+  }
+  function dynoCheck(now) {
+    const R = dyno.rpm,
+      last = R[R.length - 1];
+    if (dyno.state === 'armed') {
+      const slope = dynoSlope(R.filter(p => p.t >= now - 900));
+      if (slope == null || slope < 80 || last.x < 1000 || last.x > 3500) return;
+      const rs = dynoRatios(now - 3000, now),
+        rg = median(rs);
+      if (!rg || rs.length < 2) return;
+      if (dynoTorque(last.x, slope, rg, dynoRho()) < 0.55 * torqueRef(last.x)) return;
+      let i = R.length - 1;
+      while (i > 0 && R[i - 1].x <= R[i].x + 15 && now - R[i - 1].t < 4000) i--;
+      dyno.state = 'run';
+      dyno.run = {
+        t0: R[i].t,
+        rg,
+        max: last.x,
+        tMax: last.t
+      };
       return;
     }
-    const Rg = median(pts.filter(p => p.v > 10).map(p => p.rpm / p.v)),
-      vs = pts.map(p => p.rpm / Rg / 3.6);
-    const bins = new Map();
-    pts.forEach((p, i) => {
-      let n = 0,
-        st = 0,
-        sv = 0,
-        stt = 0,
-        stv = 0;
-      pts.forEach((q, j) => {
-        if (Math.abs(q.t - p.t) <= 0.6) {
-          n++;
-          st += q.t;
-          sv += vs[j];
-          stt += q.t * q.t;
-          stv += q.t * vs[j];
-        }
-      });
-      if (n < 3) return;
-      const den = n * stt - st * st;
-      if (den <= 0) return;
-      const a = (n * stv - st * sv) / den,
-        v = vs[i];
-      const Pc = (DYNO_M * a + 0.5 * 1.2 * DYNO_CDA * v * v + DYNO_CRR * DYNO_M * 9.81) * v / DYNO_EFF;
-      if (Pc <= 0) return;
-      const k = Math.round(p.rpm / 250) * 250,
+    if (dyno.state !== 'run') return;
+    const run = dyno.run;
+    if (last.x > run.max) {
+      run.max = last.x;
+      run.tMax = last.t;
+    }
+    const dur = now - run.t0,
+      slope = dynoSlope(R.filter(p => p.t >= now - 700));
+    const rgNow = median(dynoRatios(now - 1200, now)),
+      shifted = rgNow && Math.abs(rgNow / run.rg - 1) > 0.08;
+    if (shifted) dynoFinish('shift');else if (last.x < run.max - 150 || last.x >= DYNO_LIMIT || slope != null && slope < 60 && dur > 2500 || dur > 30000) dynoFinish('');
+  }
+  function dynoTick(s) {
+    dynoCalTick(s);
+    if (!dynoBusy()) return;
+    const now = performance.now();
+    if (!(source instanceof ObdSource)) {
+      if (s.speed != null && (!dyno.spd.length || now - dyno.spd[dyno.spd.length - 1].t > 150)) dynoSample('spd', s.speed, now);
+      if (s.rpm != null) dynoSample('rpm', s.rpm, now);
+    } else if (dyno.state === 'run' && (!source.connected || now - dyno.rpm[dyno.rpm.length - 1].t > 2500)) dynoFinish('lost');
+  }
+  function dynoSmooth(P, u) {
+    let h = 0.65,
+      sel;
+    for (;;) {
+      sel = P.filter(p => Math.abs(p.u - u) <= h);
+      if (sel.length >= 9 || h > 2.5) break;
+      h += 0.15;
+    }
+    if (sel.length < 4) return null;
+    let S0 = 0,
+      S1 = 0,
+      S2 = 0,
+      S3 = 0,
+      S4 = 0,
+      Y0 = 0,
+      Y1 = 0,
+      Y2 = 0;
+    sel.forEach(p => {
+      const x = p.u - u,
+        w = Math.pow(1 - Math.pow(Math.min(1, Math.abs(x) / (h * 1.01)), 3), 3);
+      S0 += w;
+      S1 += w * x;
+      S2 += w * x * x;
+      S3 += w * x * x * x;
+      S4 += w * x * x * x * x;
+      Y0 += w * p.r;
+      Y1 += w * x * p.r;
+      Y2 += w * x * x * p.r;
+    });
+    const det = (a, b, c, d, e, f, g, i, j) => a * (e * j - f * i) - b * (d * j - f * g) + c * (d * i - e * g);
+    const D = det(S0, S1, S2, S1, S2, S3, S2, S3, S4);
+    if (Math.abs(D) < 1e-12) return null;
+    return {
+      r: det(Y0, S1, S2, Y1, S2, S3, Y2, S3, S4) / D,
+      dr: det(S0, Y0, S2, S1, Y1, S3, S2, Y2, S4) / D
+    };
+  }
+  function dynoFinish(reason) {
+    const run = dyno.run;
+    dyno.run = null;
+    const fail = msg => {
+      dyno.state = 'armed';
+      dyno.rpm = [];
+      dyno.spd = [];
+      renderDyno();
+      say(msg + ' Le banc reste armé.');
+    };
+    if (!run) return;
+    if (reason === 'lost') return fail("J'ai perdu la liaison OBD pendant la mesure.");
+    const pts = dyno.rpm.filter(p => p.t >= run.t0 && p.t <= run.tMax);
+    const span = pts.length ? pts[pts.length - 1].x - pts[0].x : 0,
+      dur = pts.length ? (pts[pts.length - 1].t - pts[0].t) / 1000 : 0;
+    if (pts.length < 10 || span < 1200 || dur < 2) return fail(reason === 'shift' ? "Embrayage ou changement de rapport détecté pendant la mesure." : "Mesure trop courte, monsieur. Sur un même rapport, de préférence la 3e, gardez le pied au plancher de 1 500 jusqu'à 4 500 tours.");
+    const rs = dynoRatios(run.t0, run.tMax),
+      rgObd = median(rs) || run.rg,
+      kGps = dynoSpeedFactor();
+    const rg = kGps ? rgObd * kGps : rgObd;
+    const spread = rs.length > 3 ? median(rs.map(x => Math.abs(x / rgObd - 1))) : 0;
+    const T0 = pts[0].t,
+      P = pts.map(p => ({
+        u: (p.t - T0) / 1000,
+        r: p.x
+      })),
+      uEnd = P[P.length - 1].u;
+    const rho = dynoRho(),
+      bins = new Map();
+    let floored = false;
+    for (let u = 0.25; u <= uEnd - 0.15; u += 0.05) {
+      const e = dynoSmooth(P, u);
+      if (!e || e.dr <= 0 || e.r < 900) continue;
+      const Tq = dynoTorque(e.r, e.dr, rg, rho);
+      if (!floored) {
+        if (Tq < 0.6 * torqueRef(e.r)) continue;
+        floored = true;
+      }
+      const Pe = Tq * e.r * Math.PI / 30;
+      const k = Math.round(e.r / 250) * 250,
         b = bins.get(k) || {
           ch: 0,
           nm: 0,
           n: 0
         };
-      b.ch += Pc / 735.5;
-      b.nm += Pc / (p.rpm * Math.PI / 30);
+      b.ch += Pe / 735.5;
+      b.nm += Pe / (e.r * Math.PI / 30);
       b.n++;
       bins.set(k, b);
-    });
-    const curve = [...bins.entries()].sort((a, b) => a[0] - b[0]).map(([r, b]) => [r, b.ch / b.n, b.nm / b.n]);
-    if (curve.length < 4) {
-      dyno.state = 'armed';
-      say("Je n'ai pas assez de points pour tracer la courbe. Réessayez, le banc reste armé.");
-      return;
     }
+    const raw = [...bins.entries()].sort((a, b) => a[0] - b[0]).filter(c => c[1].n >= 2).map(([r, b]) => [r, b.ch / b.n, b.nm / b.n]);
+    const curve = raw.map((c, i) => {
+      const a = raw[i - 1],
+        b = raw[i + 1],
+        ok = x => x && Math.abs(x[0] - c[0]) <= 250;
+      const wa = ok(a) ? 1 : 0,
+        wb = ok(b) ? 1 : 0,
+        W = 2 + wa + wb;
+      return [c[0], (2 * c[1] + wa * (a ? a[1] : 0) + wb * (b ? b[1] : 0)) / W, (2 * c[2] + wa * (a ? a[2] : 0) + wb * (b ? b[2] : 0)) / W];
+    });
+    if (curve.length < 4) return fail("Je n'ai pas assez de points pour tracer la courbe. Réessayez.");
     const pk = curve.reduce((m, c) => c[1] > m[1] ? c : m),
       tk = curve.reduce((m, c) => c[2] > m[2] ? c : m);
+    let gear = 1;
+    for (let i = 1; i < K.length; i++) if (Math.abs(rgObd - K[i]) < Math.abs(rgObd - K[gear])) gear = i;
     dyno.last = {
       d: Date.now(),
       ch: Math.round(pk[1]),
       chRpm: pk[0],
       nm: Math.round(tk[2]),
       nmRpm: tk[0],
+      gear,
+      rg: +rg.toFixed(2),
+      rho: +rho.toFixed(3),
+      pts: pts.length,
+      gps: kGps ? +kGps.toFixed(4) : null,
       curve: curve.map(c => [c[0], +c[1].toFixed(1), +c[2].toFixed(1)])
     };
     store.set('dynoLast', dyno.last);
     dyno.state = 'done';
-    drawDyno();
+    dyno.rpm = [];
+    dyno.spd = [];
+    renderDyno();
     const pct = dyno.last.ch / 140,
-      base = `Banc terminé : ${dyno.last.ch} chevaux à ${dyno.last.chRpm.toLocaleString('fr-FR')} tours, et ${dyno.last.nm} newtons-mètres à ${dyno.last.nmRpm.toLocaleString('fr-FR')} tours. `;
-    say(base + (pct > 1.1 ? "C'est au-dessus des 140 chevaux d'origine : une pente ou un vent arrière, ou bien un moteur reprogrammé ?" : pct >= 0.9 ? "C'est conforme aux 140 chevaux d'origine. Le moteur est en forme, monsieur." : pct >= 0.8 ? "Un peu en dessous des 140 chevaux. Refaites une mesure sur du plat ; si ça se confirme, pensez au filtre à air, au débitmètre ou à la vanne EGR." : "Nettement en dessous des 140 chevaux. Refaites une mesure sur du plat, et si ça se confirme, faites vérifier le turbo, le débitmètre, la vanne EGR et le FAP."));
+      d = dyno.last;
+    let txt = `Banc terminé en ${gear}e : ${d.ch} chevaux à ${d.chRpm.toLocaleString('fr-FR')} tours, et ${d.nm} newtons-mètres à ${d.nmRpm.toLocaleString('fr-FR')} tours. `;
+    txt += pct > 1.1 ? "C'est au-dessus des 140 chevaux d'origine : une descente ou un vent arrière, ou bien un moteur reprogrammé ?" : pct >= 0.9 ? "C'est conforme aux 140 chevaux d'origine. Le moteur est en forme, monsieur." : pct >= 0.8 ? "Un peu en dessous des 140 chevaux. Refaites une mesure sur du plat ; si ça se confirme, pensez au filtre à air, au débitmètre ou à la vanne EGR." : "Nettement en dessous des 140 chevaux. Refaites une mesure sur du plat, et si ça se confirme, faites vérifier le turbo, le débitmètre, la vanne EGR et le FAP.";
+    if (spread > 0.025) txt += " Attention : le rapport a varié pendant la mesure, embrayage ou patinage ? Ce résultat est moins fiable.";
+    if (!kGps) txt += " Pour plus de précision, roulez quelques minutes à vitesse stable : je calerai le compteur sur le GPS.";
+    if (span < 2200) txt += " La plage mesurée est courte : pour une courbe complète, partez de 1 500 et allez jusqu'à 4 500 tours.";
+    say(txt);
   }
   function drawDyno() {
     const c = $('dyCanvas');
@@ -5094,8 +5237,8 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       ctx.arc(X(d.nmRpm), Yn(d.nm), 4, 0, 7);
       ctx.fill();
     }
-    if (dyno.run && dyno.run.pts.length) {
-      const r = dyno.run.pts[dyno.run.pts.length - 1].rpm;
+    if (dyno.run && dyno.rpm.length) {
+      const r = dyno.rpm[dyno.rpm.length - 1].x;
       ctx.strokeStyle = T['--text'];
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -6567,11 +6710,11 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
       };
     },
     mode_dna: async a => {
-      setDna(a.mode, true);
-      modeTransition(a.mode);
+      setDna(a.mode);
       return {
         ok: true,
-        mode: a.mode
+        mode: 'N',
+        note: "un seul style d'affichage existe désormais"
       };
     },
     afficher_page: async a => {
@@ -9350,6 +9493,8 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
     $('bootSkip').addEventListener('click', finish);
     setTimeout(next, 400);
   }
+  let holoAcc = 0,
+    holoFirst = true;
   let last = performance.now(),
     sparkAcc = 0,
     uiAcc = 0,
@@ -9460,13 +9605,16 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
     }
     if ((page === 'drive' || page === 'nav') && !nav.map) drawMap(dt, s.speed || 0);
     if (page === 'motor') {
-      tHolo += dt;
-      drawHolo($('holoCar'), tHolo, {
-        zones: true,
-        labels: true
-      });
-    }
-    fx.draw(dt, s);
+      holoAcc += dt;
+      if (holoAcc >= 1 || holoFirst) {
+        holoAcc = 0;
+        holoFirst = false;
+        drawHolo($('holoCar'), 0, {
+          zones: true,
+          labels: true
+        });
+      }
+    } else holoFirst = true;
     requestAnimationFrame(frame);
   }
   function clock() {

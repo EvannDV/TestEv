@@ -168,11 +168,11 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     box.innerHTML = '';
     this.world = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:0;height:0;will-change:transform');
     this.tileBox = css(document.createElement('div'), 'position:absolute;left:0;top:0');
-    this.canvas = css(document.createElement('canvas'), 'position:absolute;pointer-events:none');
+    this.canvas = css(document.createElement('canvas'), 'position:absolute;left:0;top:0;pointer-events:none');
     this.markBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:0;height:0');
     this.labBox = css(document.createElement('div'), 'position:absolute;left:0;top:0;opacity:.85');
-    this.world.appendChild(this.tileBox); this.world.appendChild(this.labBox); this.world.appendChild(this.canvas);
-    box.appendChild(this.world); box.appendChild(this.markBox);
+    this.world.appendChild(this.tileBox); this.world.appendChild(this.labBox);
+    box.appendChild(this.world); box.appendChild(this.canvas); box.appendChild(this.markBox);
     this.resize();
     setTimeout(() => { this.loaded = true; this.fire('load'); this.fire('styledata'); }, 0);
   }
@@ -183,7 +183,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
   P.getLayer = function (id) { return this.layers[id] || { paint: {} }; };
   P.getSource = function (id) {
     if (!(id in this.data)) return null;
-    return { setData: d => { this.data[id] = (d.features || []).map(f => f.geometry.coordinates); this.layout(); } };
+    return { setData: d => { this.data[id] = (d.features || []).map(f => f.geometry.coordinates.map(p => [lon2x(p[0], 0) / TILE, lat2y(p[1], 0) / TILE])); this.draw(); } };
   };
   P.setPaintProperty = function (id, k, v) { (this.layers[id] = this.layers[id] || { paint: {} }).paint[k] = v; if (/^(route|alts)/.test(id)) this.draw(); };
   P.setLayoutProperty = function () {};
@@ -230,34 +230,37 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       css(img.lab, (img.lab.style.visibility === 'hidden' ? 'visibility:hidden;' : '') + pos);
     }
     for (const key in this.tiles) if (!keep[key]) { this.tiles[key].lab.remove(); this.tiles[key].remove(); delete this.tiles[key]; }
-    this.draw(); this.frame();
+    this.frame();
   };
+  // Itinéraire dessiné à la taille de l'écran (une toile aussi grande que la carte tournée coûtait
+  // très cher à l'affichage) ; redessiné seulement quand la vue bouge ou que l'itinéraire change.
   P.draw = function () {
-    const r = this.ref; if (!r) return;
-    const half = Math.ceil(this.rad / Math.pow(2, this.c.zoom - r.z)) + TILE, cv = this.canvas;
-    if (cv.width !== half * 2) { cv.width = cv.height = half * 2; }
-    css(cv, 'position:absolute;pointer-events:none;left:' + -half + 'px;top:' + -half + 'px');
-    const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.lineCap = g.lineJoin = 'round';
+    const cv = this.canvas, W = this.w, H = this.h;
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    const g = cv.getContext('2d');
+    if (!this.data.route.length && !this.data.alts.length) { if (this.drawn) { g.clearRect(0, 0, W, H); this.drawn = false; } return; }
+    this.drawn = true; g.clearRect(0, 0, W, H); g.lineCap = g.lineJoin = 'round';
+    const c = this.c, sc = TILE * Math.pow(2, c.zoom), a = this.anchor(), th = -c.bearing / R2D, co = Math.cos(th), si = Math.sin(th);
+    const cx0 = lon2x(c.lon, 0) / TILE, cy0 = lat2y(c.lat, 0) / TILE, M = 200;
     const col = (id, d) => { const v = this.getLayer(id).paint['line-color']; return typeof v === 'string' && v ? v : d; };
     const path = line => {
-      g.beginPath(); let pen = false, lx = 0, ly = 0;
+      g.beginPath(); let pen = false, lx = -1e9, ly = -1e9;
       for (let i = 0; i < line.length; i++) {
-        const x = lon2x(line[i][0], r.z) - r.cx + half, y = lat2y(line[i][1], r.z) - r.cy + half;
+        const dx = (line[i][0] - cx0) * sc, dy = (line[i][1] - cy0) * sc, x = a[0] + dx * co - dy * si, y = a[1] + dx * si + dy * co;
+        if (x < -M || x > W + M || y < -M || y > H + M) { if (pen) g.lineTo(x, y); pen = false; lx = x; ly = y; continue; }
         if (pen && Math.abs(x - lx) < 1.5 && Math.abs(y - ly) < 1.5 && i < line.length - 1) continue;
-        const inside = x > -half && x < 3 * half && y > -half && y < 3 * half;
-        if (!inside) { pen = false; lx = x; ly = y; continue; }
-        if (pen) g.lineTo(x, y); else { g.moveTo(x, y); pen = true; }
+        if (pen) g.lineTo(x, y); else { if (lx > -1e8) { g.moveTo(lx, ly); g.lineTo(x, y); } else g.moveTo(x, y); pen = true; }
         lx = x; ly = y;
       }
     };
-    const k = Math.pow(2, this.c.zoom - r.z), w = px => px / k;
-    g.setLineDash([w(10), w(10)]); g.globalAlpha = 0.55; g.strokeStyle = col('alts', '#888'); g.lineWidth = w(5);
+    g.setLineDash([10, 10]); g.globalAlpha = 0.55; g.strokeStyle = col('alts', '#888'); g.lineWidth = 5;
     this.data.alts.forEach(l => { path(l); g.stroke(); });
     g.setLineDash([]);
     this.data.route.forEach(l => {
-      g.globalAlpha = 0.3; g.strokeStyle = col('route', '#4fe3ff'); g.lineWidth = w(18); path(l); g.stroke();
-      g.globalAlpha = 1; g.lineWidth = w(8); g.stroke();
-      g.globalAlpha = 0.9; g.strokeStyle = '#fff'; g.lineWidth = w(2); g.stroke();
+      path(l);
+      g.globalAlpha = 0.3; g.strokeStyle = col('route', '#4fe3ff'); g.lineWidth = 18; g.stroke();
+      g.globalAlpha = 1; g.lineWidth = 8; g.stroke();
+      g.globalAlpha = 0.9; g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke();
     });
     g.globalAlpha = 1;
   };
@@ -267,6 +270,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     const k = Math.pow(2, c.zoom - r.z), dx = (lon2x(c.lon, r.z) - r.cx) * k, dy = (lat2y(c.lat, r.z) - r.cy) * k, a = this.anchor();
     this.world.style.transform = 'translate(' + a[0] + 'px,' + a[1] + 'px) rotate(' + -c.bearing + 'deg) translate(' + -dx + 'px,' + -dy + 'px) scale(' + k + ')';
     this.markers.forEach(m => m.place());
+    this.draw();
     if (Math.abs(dx) > TILE * 0.75 || Math.abs(dy) > TILE * 0.75 || Math.abs(c.zoom - r.zoom) > 0.35 || Math.max(2, Math.min(MAXZ, Math.round(c.zoom))) !== r.z && !this.anim) this.layout();
   };
   P.project = function (ll) {

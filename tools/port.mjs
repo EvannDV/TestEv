@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import babel from '@babel/core';
 import * as acorn from 'acorn';
+import postcss from 'postcss';
 import { portCss, runtimeVars } from './css.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.dirname(HERE);
@@ -52,9 +53,72 @@ const ATTRIB = '© OpenFreeMap · OpenMapTiles · contributeurs OpenStreetMap ·
 if (html.split(ATTRIB).length !== 2) throw new Error('retouche : crédit de la carte introuvable');
 const outHtml = html.replace(ATTRIB, '© Esri · contributeurs OpenStreetMap · OSRM');
 
+// Remplace le texte compris entre deux repères (chacun présent une seule fois)
+const patchRange = (from, until, to) => {
+  const i = js.indexOf(from), j = js.indexOf(until, i);
+  if (i < 0 || j < 0 || js.indexOf(from, i + 1) >= 0) throw new Error('retouche : repères introuvables ' + from.slice(0, 50));
+  js = js.slice(0, i) + to + js.slice(j);
+};
+
+/* ---------- un seul style (Natural), allégé pour le processeur de l'autoradio ---------- */
+patch("let dna = store.get('dna', 'N');", "let dna = 'N';");
+patchRange('function setDna(m, quiet) {', "document.querySelectorAll('.dna button').forEach(b => b.addEventListener", `function setDna(m, quiet) {
+  if (m !== 'N' && !quiet) say("J'ai désormais un seul style d'affichage, monsieur. Il est taillé pour la fluidité.");
+  dna = 'N';
+  document.documentElement.dataset.dna = 'N';
+  $('modeTag').textContent = DNA_INFO.N.tag;
+  $('stat3l').textContent = 'Charge';
+  refreshTokens(); if (typeof restyleMap === 'function') restyleMap();
+}
+`);
+patch("mode_dna: async a => { setDna(a.mode, true); modeTransition(a.mode); return { ok: true, mode: a.mode }; },",
+  "mode_dna: async a => { setDna(a.mode); return { ok: true, mode: 'N', note: \"un seul style d'affichage existe désormais\" }; },");
+patch("function modeTransition(m) {", "function modeTransition(m) { return;");
+patch('  fx.draw(dt, s);\n', ''); // fond animé plein écran : supprimé (deux toiles plein écran redessinées à chaque image)
+patch("  if (page === 'motor') { tHolo += dt; drawHolo($('holoCar'), tHolo, { zones: true, labels: true }); }",
+  // voiture 3D : vue de trois quarts fixe, redessinée une fois par seconde (couleurs des zones)
+  "  if (page === 'motor') { holoAcc += dt; if (holoAcc >= 1 || holoFirst) { holoAcc = 0; holoFirst = false; drawHolo($('holoCar'), 0, { zones: true, labels: true }); } } else holoFirst = true;");
+patch("let last = performance.now(), sparkAcc = 0,", "let holoAcc = 0, holoFirst = true;\nlet last = performance.now(), sparkAcc = 0,");
+// Taille des toiles : mesurée une fois puis gardée (la mesurer à chaque image force un recalcul de toute la page)
+patch(`function fitCanvas(c) {
+  const dpr = devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;`, `const fitCache = new WeakMap(); let fitEpoch = 0;
+addEventListener('resize', () => fitEpoch++); document.addEventListener('click', () => fitEpoch++, true);
+function fitCanvas(c) {
+  let fm = fitCache.get(c); const fnow = performance.now();
+  if (!fm || fm.e !== fitEpoch || !fm.w || !fm.h || fnow - fm.t > 2000) { fm = { w: c.clientWidth, h: c.clientHeight, e: fitEpoch, t: fnow }; fitCache.set(c, fm); }
+  const dpr = devicePixelRatio || 1, w = fm.w, h = fm.h;`);
+
+/* ---------- banc de puissance : mesures datées, régime prioritaire, calcul revu (tools/dyno.js) ---------- */
+patch("const DYNO_M = 1475, DYNO_CDA = 0.61, DYNO_CRR = 0.012, DYNO_EFF = 0.85;",
+  "const DYNO_M = 1475, DYNO_CDA = 0.61, DYNO_CRR = 0.012, DYNO_EFF = 0.90; // rendement de transmission seul : roulement et masses tournantes sont comptés à part");
+patch("if (dyno.run && dyno.run.pts.length) { const r = dyno.run.pts[dyno.run.pts.length - 1].rpm;", "if (dyno.run && dyno.rpm.length) { const r = dyno.rpm[dyno.rpm.length - 1].x;");
+patchRange("const dyno = { state: 'idle', run: null, last: store.get('dynoLast', null) };", 'function drawDyno() {', fs.readFileSync(path.join(HERE, 'dyno.js'), 'utf8') + '\n');
+patch(`    if (!this.sup.has(pid)) return;
+    const b = this.parse(await this.cmd('01' + pid), pid); if (!b) return;
+    this.raw[pid] = b;`, `    if (!this.sup.has(pid)) return;
+    const tQ = performance.now(), b = this.parse(await this.cmd('01' + pid), pid); if (!b) return;
+    this.raw[pid] = b;
+    const tM = (tQ + performance.now()) / 2; // instant de la mesure : milieu entre la question et la réponse
+    if (pid === '0C' && b.length >= 2) dynoSample('rpm', (b[0] * 256 + b[1]) / 4, tM);
+    if (pid === '0D') dynoSample('spd', b[0], tM);`);
+patch("while (this.connected) { for (const p of FAST) await this.read(p); await this.read(SLOW[this.slowI++ % SLOW.length]); }",
+  "while (this.connected) {\n      if (dynoBusy()) { await this.read('0C'); this.dynI = (this.dynI || 0) + 1; if (this.dynI % 3 === 0) await this.read('0D'); continue; } // banc : régime en priorité\n      for (const p of FAST) await this.read(p); await this.read(SLOW[this.slowI++ % SLOW.length]);\n    }");
+// Simulateur (démo) : même physique que le calcul, masses tournantes comprises
+patch("const am = (Pw / v - 0.5 * 1.2 * DYNO_CDA * v * v - DYNO_CRR * DYNO_M * 9.81) / DYNO_M;",
+  "const am = (Pw / v - 0.5 * 1.2 * DYNO_CDA * v * v - DYNO_CRR * DYNO_M * 9.81) / (DYNO_M * dynoLambda(K[3]));");
+
 /* ---------- conversion pour le vieux moteur web ---------- */
 const report = [];
-const ported = portCss(css, report);
+const oneStyle = postcss.parse(css);
+const otherMode = sel => /\[data-dna="[DA]"\]/.test(sel.replace(/:not\([^)]*\)/g, '')) || /\.modefx|\.mf-/.test(sel);
+oneStyle.walkRules(r => {
+  if (r.parent && r.parent.type === 'atrule' && /keyframes/.test(r.parent.name)) return;
+  const keep = r.selectors.filter(x => !otherMode(x));
+  if (!keep.length) r.remove(); else if (keep.length !== r.selectors.length) r.selectors = keep;
+});
+oneStyle.walkDecls(/^(-webkit-)?backdrop-filter$/, d => d.remove());
+oneStyle.append('.panel,.top,.controls{contain:layout style}#fxBack,#fxFront,.dna,#modeFx{display:none!important}.ring,.core i:nth-child(1),.holo::before{animation:none!important}');
+const ported = portCss(oneStyle.toString(), report);
 let outCss = ported.css
   .replace('width:min(86%,340px)', 'width:86%;max-width:340px')
   .replace('.set label.chk{flex-direction:row;align-items:center;gap:10px;', '.set label.chk>*+*{margin-left:10px}.set label.chk{flex-direction:row;align-items:center;')

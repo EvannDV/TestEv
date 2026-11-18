@@ -66,7 +66,7 @@ L'APK embarque maintenant l'interface de `jarvis-giulietta`, convertie par `tool
   `!important`) ; `gap` grid -> `grid-gap` ; `clamp/min/max` -> variables `--jxN` calculées
   en px au lancement ; `place-items`, `padding-block` développés.
 - `tools/shim.js` : polyfills, voix (`speechSynthesis` -> `Android.say`), **carte 2D en
-  tuiles images CARTO** exposée comme `window.maplibregl` (plus de MapLibre ni de WebGL),
+  tuiles images Esri/OSM** exposée comme `window.maplibregl` (plus de MapLibre ni de WebGL),
   rapports d'aspect, bandeau rouge d'erreurs JS.
 - OBD (v3.0) : le code OBD d'origine (`ObdSource` + `WebBleLink`) est utilisé **tel quel** ;
   `shim.js` fournit `navigator.bluetooth` (requestDevice, gatt.connect, getPrimaryService,
@@ -94,6 +94,44 @@ a été refusé dans la session. Fluidité sur le SC7731e inconnue.
 Comparer original et portage : `node tools/port.mjs --temoin /chemin/orig.html`, puis ouvrir
 `dist/index.html?apercu` (simulateur) à côté.
 
+## Un seul style, allégé (v3.1, 18 nov. 2026)
+
+À la demande de l'utilisateur : **un seul style** (Natural, noir et champagne), très optimisé.
+Retouches dans `tools/port.mjs` :
+- styles Sport (D) et Pluie (A) retirés du CSS (règles `[data-dna="D|A"]`, `.modefx`), sélecteur
+  DNA masqué, `setDna` force N (Jarvis répond qu'il n'y a qu'un style), `modeTransition` vide ;
+- fond animé plein écran (`fx.draw`, deux toiles redessinées à chaque image) supprimé ;
+- `fitCanvas` garde la taille des toiles (la mesurer à chaque image forçait un recalcul de page) ;
+- voiture 3D (page Moteur) : vue fixe, redessinée une fois par seconde ;
+- `backdrop-filter` et animations décoratives infinies retirés ; `contain: layout style` sur
+  `.panel`, `.top`, `.controls` ;
+- carte 2D : itinéraire dessiné sur une toile de la taille de l'écran (l'ancienne toile en
+  coordonnées carte faisait jusqu'à 2 200 px de côté et coûtait très cher à l'affichage).
+Mesure (Chromium, processeur ralenti 6×, mode appli avec « mode démo »), ms par image :
+Conduite 32 -> 10, Nav 42 -> 7, Moteur 82 -> 9, Perf 24 -> 7, Garage 17 -> 2.
+
+## Banc de puissance (v3.1) : `tools/dyno.js`
+
+Remplace le banc d'origine (`patchRange` de `const dyno =` à `function drawDyno`). Défauts de
+l'original : départ seulement entre 1 000 et 2 200 tr/min avec charge OBD > 80 % (tirage
+souvent jamais détecté), mesures datées à l'affichage et lissées (retard), vitesse en km/h
+entiers. Nouveau :
+- mesures datées au milieu question/réponse (`ObdSource.read`), régime seul (plus 0D une fois
+  sur trois) pendant le banc (`ObdSource.loop`) ;
+- départ : couple nécessaire à la montée de régime >= 55 % du couple d'origine (tout rapport),
+  début de courbe coupé tant que < 60 % ; fin : régime qui retombe, plafonne, embrayage
+  (rapport qui varie de 8 %), 4 900 tr/min, 30 s ;
+- v et a tirés du régime ÷ rapport mesuré ; régression quadratique locale (±0,65 s, 9 points
+  mini) ; lissage 1-2-1 entre paliers de 250 tr/min avant de prendre les pics ;
+- physique : masses tournantes λ = 1,04 + 0,0025·i², densité de l'air OBD (33, 46),
+  rendement de transmission 0,90 ;
+- calibration en tâche de fond du compteur OBD par la vitesse GPS (roulage stable > 30 km/h),
+  `store 'dynoSpeedCal'`, utilisée dès 10 mesures.
+Test (faux OBDLink piloté par une voiture simulée, couple d'origine = 140 ch / 320 Nm) :
+puissance max à ±1,5 % sur 3e, 4e, départ à 2 200, montée douce, adaptateur lent ; compteur
+faux de 3 % : +5 % sans GPS, -0,7 % calé GPS. Erreurs réelles non simulées : pente, vent,
+masse (passagers, carburant), pertes réelles de transmission.
+
 ## Mises à jour intégrées (v2.1)
 
 `Updater.java` lit `version.json` (généré par `android/build.sh` à partir de `VERSION_CODE` /
@@ -115,8 +153,8 @@ reconnaissance sur l'autoradio. Le Diagnostic affiche les lignes VOIX et MICRO.
 
 1. Fait : v3.0 = interface Giulietta + OBD Bluetooth + carte Esri/OSM + voix et micro Android
    + mises à jour intégrées. Le CAN est retiré de l'appli.
-2. **En attente de l'utilisateur** : essai réel de la v3.0 (connexion à l'OBDLink, carte,
-   voix). Rien de tout ça n'a encore tourné sur l'autoradio.
+2. v3.0 confirmée par l'utilisateur sur l'autoradio (« ça marche »).
+3. **En attente de l'utilisateur** : essai de la v3.1 (fluidité, banc de puissance réel).
 
 ## Règles
 
