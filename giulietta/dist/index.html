@@ -1042,6 +1042,233 @@ button{cursor:pointer}
   .gt-dial{height:380px}
   .wx-spd{min-height:520px}
 }
+/* ============================================================
+   THÈME JARVIS (autoradio) : un seul style, cyan glacier sur anthracite.
+   Ajouté après le CSS d'origine ; mêmes noms de classes, mêmes variables.
+   Pas de flou, pas de filtre, pas d'animation permanente : le processeur est modeste.
+   ============================================================ */
+:root[data-dna="N"]{
+  --bg:#05080c; --bg-rgb:5,8,12; --bg-glow:#0b1d2b; --panel:#0d141c; --panel-2:#080d13; --panel-rgb:13,20,28; --panel2-rgb:8,13,19;
+  --line:#172331; --line-hi:#26394b; --acc:#5cd0ff; --acc-rgb:92,208,255; --acc-dim:#2f86ad;
+  --text:#e7f3fb; --muted:#7d93a6; --ice:#a4dcff; --ok:#3ddc97; --amber:#ffb24a; --red:#ff5468;
+}
+:root[data-dna="N"] body{background:radial-gradient(ellipse 70% 55% at 50% -8%,#0f2333 0%,rgba(15,35,51,0) 70%),linear-gradient(180deg,#070b10,#04060a) fixed}
+/* ---------- panneaux ---------- */
+:root[data-dna="N"] .panel{border-radius:18px;border:1px solid rgba(120,190,240,.10);
+  background:linear-gradient(180deg,#0f1822 0%,#0a1018 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 30px rgba(0,0,0,.45)}
+.label{color:var(--muted);letter-spacing:.16em}
+.note{color:#6f8496}
+/* ---------- en-tête ---------- */
+:root[data-dna="N"] .brand-name{color:var(--acc);font-weight:600;letter-spacing:.34em}
+.tabs{display:flex;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:14px;padding:3px}
+.tabs>*+*{
+  margin-left:2px !important;
+}
+.tabs>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.top{flex-wrap:nowrap}
+.tabs{flex:none}
+:root[data-dna="N"] .tab{border:0;border-radius:10px;padding:6px 11px;font-size:13px;letter-spacing:.1em;color:var(--muted)}
+:root[data-dna="N"] .tab[aria-selected="true"]{color:var(--text);border:0;background:linear-gradient(180deg,rgba(var(--acc-rgb),.22),rgba(var(--acc-rgb),.10));box-shadow:inset 0 0 0 1px rgba(var(--acc-rgb),.35)}
+.badge{border-radius:10px;padding:4px 9px}
+.badge.live{background:rgba(61,220,151,.08)}
+:root[data-dna="N"] .icon-btn{border-radius:10px;border-color:var(--line-hi);background:rgba(255,255,255,.02)}
+.clock .time{font-weight:500;letter-spacing:.04em}
+/* ---------- boutons, champs, puces ---------- */
+:root[data-dna="N"] .btn{border-radius:10px;border-color:var(--line-hi);background:rgba(255,255,255,.02);color:var(--ice)}
+:root[data-dna="N"] .btn.primary{background:linear-gradient(180deg,#7fdcff,#43b8ea);border-color:#5cd0ff;color:#04121b;font-weight:600}
+.seg-ctrl{display:flex;border-radius:12px;overflow:hidden;border-color:var(--line-hi);background:rgba(255,255,255,.02)}
+.seg-ctrl button{font-size:14px;padding:7px 16px}
+.seg-ctrl button[aria-pressed="true"]{background:linear-gradient(180deg,rgba(var(--acc-rgb),.30),rgba(var(--acc-rgb),.14));color:var(--text)}
+.state{border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.03)}
+#q{border-radius:12px;background:#070c12;border-color:var(--line-hi)}
+.mic{border-radius:12px}
+/* ---------- conduite : colonne centrale ---------- */
+:root[data-dna="N"] .gt-info{padding:8px 16px}
+.gt-row{display:flex;border-bottom:1px solid var(--line);padding:9px 0}
+.gt-row .label{align-self:center}
+.gt-row b{font-weight:500;color:var(--text)}
+:root[data-dna="N"] .turn,:root[data-dna="N"] .eta{border-radius:14px;background:rgba(7,12,18,.9);border-color:var(--line-hi)}
+/* ---------- cadrans ---------- */
+.gt-big{font-family:var(--f-display);font-weight:500;font-size:88px;fill:var(--text);text-anchor:middle;font-variant-numeric:tabular-nums}
+.gt-big.none{font-size:34px;letter-spacing:.1em;fill:var(--muted)}
+.gt-unit{font-family:var(--f-mono);font-size:12px;letter-spacing:5px;fill:var(--muted);text-anchor:middle}
+.gt-sub{font-family:var(--f-display);font-size:21px;fill:var(--ice);text-anchor:middle;font-variant-numeric:tabular-nums}
+.gt-sub.over{fill:var(--red);font-weight:600}
+.gt-num{font-family:var(--f-display);font-size:19px;fill:#9fb4c4;text-anchor:middle;dominant-baseline:central}
+.gt-arc{transition:stroke-dasharray .22s linear}
+.gt-arc.hot{stroke:var(--red)}
+.gt-needle{transition:transform .22s linear}
+/* ---------- moteur, garage ---------- */
+.srow{border-bottom-color:var(--line)}
+.srow b{font-weight:500}
+/* ---------- console Jarvis ---------- */
+.msg time{color:#566b7d}
+/* ---------- fenêtre holographique (briefing) ---------- */
+:root[data-dna="N"] .holo{border-radius:18px;border:1px solid rgba(var(--acc-rgb),.35);background:linear-gradient(180deg,rgba(14,26,38,.97),rgba(8,14,21,.97));box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.holo h2{color:var(--text)}
+.holo .x{border-radius:10px}
+/* ============================================================
+   BANC DE PUISSANCE : pleine largeur, courbes à gauche, tout le reste à droite
+   ============================================================ */
+.perf .chrono.banc{grid-column:1 / -1}
+.chrono.banc ~ .records{display:none}
+.chrono.banc{display:flex;flex-direction:column;padding:12px 16px}
+.chrono.banc>*+*{
+  margin-top:10px !important;
+}
+.chrono.banc>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dyno{display:flex;flex-direction:column;flex:1;min-height:0}
+.dy-main{display:flex;flex:1;min-height:0}
+.dy-main>*+*{
+  margin-left:16px !important;
+}
+.dy-main>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-chart{position:relative;flex:1.65;min-width:0;display:flex;flex-direction:column}
+.dy-chart>*+*{
+  margin-top:6px !important;
+}
+.dy-chart>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dy-legend{display:flex;flex-wrap:wrap;margin-right:-14px;margin-bottom:-14px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.dy-legend>*{
+  margin-right:14px;
+  margin-bottom:14px;
+}
+.dy-legend span{display:flex;align-items:center}
+.dy-legend span>*+*{
+  margin-left:6px !important;
+}
+.dy-legend span>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-legend span::before{content:"";display:block;width:16px;height:3px;border-radius:2px}
+.dy-legend .lg-ch::before{background:var(--acc)}
+.dy-legend .lg-nm::before{background:var(--amber)}
+.dy-legend .lg-ref::before{background:repeating-linear-gradient(90deg,#8aa0b2 0 4px,transparent 4px 7px);height:2px}
+.dy-legend .lg-prev::before{background:rgba(231,243,251,.35)}
+#dyCanvas{width:100%;flex:1;min-height:0;display:block}
+.dy-cursor{position:absolute;top:22px;bottom:22px;width:2px;margin-left:-1px;background:var(--text);opacity:.85;box-shadow:0 0 10px rgba(var(--acc-rgb),.8);pointer-events:none}
+.dy-side{flex:1;min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--line);padding-left:16px;overflow:hidden}
+.dy-side>*+*{
+  margin-top:8px !important;
+}
+.dy-side>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dy-head{display:flex;align-items:center;justify-content:space-between}
+.dy-head>*+*{
+  margin-left:10px !important;
+}
+.dy-head>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-chip{font-family:var(--f-mono);font-size:11px;letter-spacing:.18em;padding:4px 10px;border-radius:999px;border:1px solid var(--line-hi);color:var(--muted)}
+.dy-chip[data-s="armed"]{color:var(--amber);border-color:var(--amber);background:rgba(255,178,74,.08)}
+.dy-chip[data-s="run"]{color:#04121b;border-color:var(--acc);background:var(--acc)}
+.dy-chip[data-s="done"]{color:var(--ok);border-color:var(--ok);background:rgba(61,220,151,.08)}
+.dy-state{font-size:14px;line-height:1.35;color:var(--text);min-height:19px}
+.dy-live{display:flex;flex-direction:column}
+.dy-live>*+*{
+  margin-top:10px !important;
+}
+.dy-live>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dy-gauge{display:flex;justify-content:space-between;align-items:flex-end}
+.dy-gauge>*+*{
+  margin-left:8px !important;
+}
+.dy-gauge>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-gauge div{display:flex;flex-direction:column;align-items:flex-start}
+.dy-gauge b{font-family:var(--f-display);font-weight:500;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.dy-gauge .dy-rpm b{font-size:40px;color:var(--acc)}
+.dy-gauge small{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.dy-bar{position:relative;height:10px;border-radius:6px;background:#132230;margin:2px 0 16px}
+.dy-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;background:linear-gradient(90deg,#1f86c2,#8fe6ff)}
+.dy-bar span{position:absolute;top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.dy-bar span.r{right:0}
+.dy-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;counter-reset:st}
+.dy-steps>*+*{
+  margin-top:6px !important;
+}
+.dy-steps>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dy-steps li{display:flex;align-items:center;font-size:14px;color:var(--muted);counter-increment:st}
+.dy-steps li>*+*{
+  margin-left:10px !important;
+}
+.dy-steps li>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-steps li::before{content:counter(st);flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line-hi);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:11px}
+.dy-steps li.on{color:var(--text)}
+.dy-steps li.on::before{border-color:var(--acc);color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.15)}
+.dy-steps li.done{color:#a9bccb}
+.dy-steps li.done::before{content:"✓";border-color:var(--ok);background:var(--ok);color:#04121b}
+.dy-res{display:flex;flex-direction:column;min-height:0}
+.dy-res>*+*{
+  margin-top:9px !important;
+}
+.dy-res>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dy-big{display:flex}
+.dy-big>*+*{
+  margin-left:12px !important;
+}
+.dy-big>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-big > div{flex:1;display:flex;flex-direction:column;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid var(--line)}
+.dy-big b{font-family:var(--f-display);font-weight:600;font-size:34px;line-height:1.05;font-variant-numeric:tabular-nums}
+.dy-big b small{font-size:14px;color:var(--muted);font-weight:400;margin-left:4px}
+.dy-big .p b{color:var(--acc)}
+.dy-big .t b{color:var(--amber)}
+.dy-big > div > small{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.dy-verdict{display:flex;align-items:center;padding:6px 10px;border-radius:10px;border:1px solid var(--line-hi)}
+.dy-verdict>*+*{
+  margin-left:10px !important;
+}
+.dy-verdict>[hidden]:first-child+*{
+  margin-left:0 !important;
+}
+.dy-verdict b{font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.dy-verdict span{font-size:13.5px;line-height:1.25}
+.dy-verdict[data-v="ok"]{border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.07)}
+.dy-verdict[data-v="ok"] b{color:var(--ok)}
+.dy-verdict[data-v="low"]{border-color:rgba(255,178,74,.5);background:rgba(255,178,74,.07)}
+.dy-verdict[data-v="low"] b{color:var(--amber)}
+.dy-verdict[data-v="bad"]{border-color:rgba(255,84,104,.5);background:rgba(255,84,104,.07)}
+.dy-verdict[data-v="bad"] b,.dy-verdict[data-v="high"] b{color:var(--red)}
+.dy-verdict[data-v="high"]{border-color:rgba(164,220,255,.5)}
+.dy-cmp{font-size:13px;color:var(--ice);min-height:17px}
+.dy-cond{display:grid;grid-template-columns:auto 1fr auto 1fr;grid-gap:4px 10px;gap:4px 10px;margin:0;font-size:12.5px}
+.dy-cond dt{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-self:center}
+.dy-cond dd{margin:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dy-cond dd.good{color:var(--ok)}
+.dy-cond dd.warn{color:var(--amber)}
+.dy-hist{display:flex;align-items:center;margin-right:-8px;margin-bottom:-8px;flex-wrap:wrap;margin-top:auto}
+.dy-hist>*{
+  margin-right:8px;
+  margin-bottom:8px;
+}
+.dy-hist:not(#\9){
+  margin-top:auto !important;
+}
+.dy-hist i{font-style:normal;font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line-hi);color:#a9bccb}
+.dy-hist i.cur{border-color:var(--acc);color:var(--acc)}
+.dy-empty{font-size:14px;color:var(--muted);line-height:1.4}
 .panel,.top,.controls{contain:layout style}
 #fxBack,#fxFront,.dna,#modeFx{display:none!important}
 .ring,.core i:nth-child(1),.holo::before{animation:none!important}
@@ -1235,14 +1462,40 @@ button{cursor:pointer}
           <div class="stat"><span class="label">Accélération</span><b><span id="pfG">0,00</span><small>g</small></b><div class="gbar"><i id="pfGbar"></i></div></div>
         </div>
         <div class="dyno" id="dynoBox">
-          <div class="dyno-head"><div class="pstate" id="dyState">--</div><button class="btn primary" id="dyArm" type="button">Armer le banc</button></div>
-          <canvas id="dyCanvas" aria-label="Courbes de puissance et de couple"></canvas>
-          <div class="pgrid">
-            <div class="stat"><span class="label">Puissance max</span><b id="dyCh">--</b></div>
-            <div class="stat"><span class="label">Couple max</span><b id="dyNm">--</b></div>
-            <div class="stat"><span class="label">Vs 140 ch d'origine</span><b id="dyPct">--</b></div>
+          <div class="dy-main">
+            <div class="dy-chart">
+              <div class="dy-legend"><span class="lg-ch">Puissance</span><span class="lg-nm">Couple</span><span class="lg-ref">Origine 140 ch · 320 Nm</span><span class="lg-prev" id="dyLgPrev" hidden>Mesure précédente</span></div>
+              <canvas id="dyCanvas" aria-label="Courbes de puissance et de couple"></canvas>
+            </div>
+            <div class="dy-side">
+              <div class="dy-head"><span class="dy-chip" id="dyChip">PRÊT</span><button class="btn primary" id="dyArm" type="button">Armer le banc</button></div>
+              <div class="dy-state" id="dyState">--</div>
+              <div class="dy-live" id="dyLive" hidden>
+                <div class="dy-gauge">
+                  <div class="dy-rpm"><b id="dyRpm">--</b><small>tr/min</small></div>
+                  <div><b id="dyGear">–</b><small>rapport</small></div>
+                  <div><b id="dySpd">--</b><small>km/h</small></div>
+                </div>
+                <div class="dy-bar"><i id="dyBar"></i><span>1 500</span><span class="r">4 500 tr/min</span></div>
+                <ol class="dy-steps" id="dySteps">
+                  <li>Banc armé</li>
+                  <li>3e engagée vers 1 500 tr/min, route plate</li>
+                  <li>Pied au plancher</li>
+                  <li>Relâchez vers 4 500 tr/min</li>
+                </ol>
+              </div>
+              <div class="dy-res" id="dyRes">
+                <div class="dy-big">
+                  <div class="p"><span class="label">Puissance max</span><b id="dyCh">--</b><small id="dyChAt"></small></div>
+                  <div class="t"><span class="label">Couple max</span><b id="dyNm">--</b><small id="dyNmAt"></small></div>
+                </div>
+                <div class="dy-verdict" id="dyVerdict" hidden><b id="dyPct">--</b><span id="dyVerdictTxt"></span></div>
+                <div class="dy-cmp" id="dyCmp"></div>
+                <dl class="dy-cond" id="dyCond"></dl>
+                <div class="dy-hist"><span class="label">Historique</span><span id="dyHist"></span></div>
+              </div>
+            </div>
           </div>
-          <p class="note">En 3e, sur une route plate et dégagée, pied au plancher de 1 500 à 4 500 tr/min. Estimation à partir du régime, du poids et de l'aérodynamique : ±10 %. Pointillés : courbes d'origine approximatives.</p>
         </div>
       </div>
       <div class="panel records">
@@ -3291,48 +3544,68 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
   const rpmSegs = [...$('rpmSegs').children];
   let lastGear = null;
   $('rpmRed').setAttribute('d', arc(172, A0 + SW * 0.9, A0 + SW));
-  function gtDial(svg, max, step, red, unit, withBig) {
+  function gtDial(svg, max, step, red, unit) {
     const ang = v => A0 + SW * v / max,
       P = (a, r) => [235 + r * Math.cos(a * Math.PI / 180), 235 + r * Math.sin(a * Math.PI / 180)];
+    const arcD = (r, a0, a1) => {
+      const [x0, y0] = P(a0, r),
+        [x1, y1] = P(a1, r);
+      return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+    };
     const id = svg.id;
-    let h = `<defs><radialGradient id="${id}F" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#1a1a1c"/><stop offset="1" stop-color="#08080a"/></radialGradient></defs>
-    <circle cx="235" cy="235" r="222" fill="url(#${id}F)" stroke="#2c2a27" stroke-width="2"/>
-    <circle cx="235" cy="235" r="210" fill="none" stroke="var(--acc)" stroke-width="1" opacity=".55"/>`;
+    let h = `<defs>
+      <radialGradient id="${id}F" cx="50%" cy="40%" r="64%"><stop offset="0" stop-color="#122030"/><stop offset=".72" stop-color="#090f16"/><stop offset="1" stop-color="#05080c"/></radialGradient>
+      <linearGradient id="${id}G" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1c7fb8"/><stop offset="1" stop-color="#9be9ff"/></linearGradient>
+    </defs>
+    <circle cx="235" cy="235" r="228" fill="url(#${id}F)" stroke="rgba(120,200,255,.16)" stroke-width="1.5"/>
+    <circle cx="235" cy="235" r="216" fill="none" stroke="rgba(120,200,255,.06)" stroke-width="1"/>
+    <path d="${arcD(204, A0, A0 + SW)}" fill="none" stroke="#122130" stroke-width="13" stroke-linecap="round"/>`;
+    if (red) h += `<path d="${arcD(204, ang(red), A0 + SW)}" fill="none" stroke="rgba(255,84,104,.45)" stroke-width="13"/>`;
+    h += `<path class="gt-arc" d="${arcD(204, A0, A0 + SW)}" pathLength="1000" fill="none" stroke="url(#${id}G)" stroke-width="13" stroke-linecap="round" stroke-dasharray="0 1000"/>`;
     for (let i = 0; i <= max / step * 5; i++) {
       const v = i * step / 5,
         major = i % 5 === 0,
-        [x0, y0] = P(ang(v), 196),
-        [x1, y1] = P(ang(v), major ? 176 : 188);
-      h += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="${red && v >= red ? '#c9473d' : major ? '#efe9dd' : '#6f6a62'}" stroke-width="${major ? 2.5 : 1.2}"/>`;
+        [x0, y0] = P(ang(v), 186),
+        [x1, y1] = P(ang(v), major ? 170 : 180);
+      const col = red && v >= red ? '#ff5468' : major ? '#d8e7f2' : '#34495a';
+      h += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="${col}" stroke-width="${major ? 3 : 1.4}" stroke-linecap="round"/>`;
       if (major) {
-        const [tx, ty] = P(ang(v), 152);
+        const [tx, ty] = P(ang(v), 146);
         h += `<text class="gt-num" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}">${max > 1000 ? v / 1000 : v}</text>`;
       }
     }
-    h += withBig ? `<text class="gt-big" x="235" y="340">0</text><text class="gt-unit" x="235" y="366">${unit}</text><text class="gt-sub" x="235" y="400"></text>` : `<text class="gt-unit" x="235" y="318">${unit}</text><text class="gt-sub" x="235" y="350"></text>`;
-    h += `<g class="gt-needle" style="transform:rotate(${A0}deg)"><line x1="215" y1="235" x2="405" y2="235" stroke="#f2ede4" stroke-width="4" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(255,255,255,.35))"/></g>
-    <circle cx="235" cy="235" r="11" fill="#1c1b1a" stroke="var(--acc)" stroke-width="2"/>`;
+    h += `<text class="gt-big" x="235" y="262">–</text><text class="gt-unit" x="235" y="294">${unit}</text><text class="gt-sub" x="235" y="340"></text>
+    <g class="gt-needle" style="transform:rotate(${A0}deg)"><line x1="352" y1="235" x2="414" y2="235" stroke="#f4fbff" stroke-width="5" stroke-linecap="round"/></g>`;
     svg.innerHTML = h;
     const needle = svg.querySelector('.gt-needle'),
       big = svg.querySelector('.gt-big'),
-      sub = svg.querySelector('.gt-sub');
+      sub = svg.querySelector('.gt-sub'),
+      arcEl = svg.querySelector('.gt-arc');
+    let lastDash = '';
     return {
       set(v, bigTxt, subTxt, over) {
-        needle.style.transform = `rotate(${ang(clamp(v || 0, 0, max)).toFixed(1)}deg)`;
-        if (big && big.textContent !== bigTxt) {
+        const f = clamp(v || 0, 0, max) / max,
+          dash = (f * 1000).toFixed(0) + ' 1000';
+        if (dash !== lastDash) {
+          lastDash = dash;
+          arcEl.setAttribute('stroke-dasharray', dash);
+          needle.style.transform = `rotate(${ang(f * max).toFixed(1)}deg)`;
+        }
+        arcEl.classList.toggle('hot', !!(red && v >= red));
+        if (big.textContent !== bigTxt) {
           big.textContent = bigTxt;
-          big.classList.toggle('none', bigTxt === 'NONE');
+          big.classList.toggle('none', bigTxt === 'NONE' || bigTxt === '–');
         }
         if (sub.textContent !== subTxt) sub.textContent = subTxt;
         sub.classList.toggle('over', !!over);
       }
     };
   }
-  const gtRpm = gtDial($('gtRpm'), 5000, 1000, 4500, 'TR/MIN ×1000', false);
-  const gtSpd = gtDial($('gtSpd'), 220, 20, 0, 'KM/H', true);
+  const gtRpm = gtDial($('gtRpm'), 5000, 1000, 4500, 'RAPPORT');
+  const gtSpd = gtDial($('gtSpd'), 220, 20, 0, 'KM/H');
   function gtUpdate(s) {
     const g = s.gear;
-    gtRpm.set(s.rpm, '', s.rpm == null ? 'NONE' : g == null ? (Math.round(s.rpm / 10) * 10).toLocaleString('fr-FR') + ' tr/min' : g === 0 ? 'Point mort' : g + (g === 1 ? 're' : 'e') + ' rapport');
+    gtRpm.set(s.rpm, s.rpm == null ? 'NONE' : g == null ? '–' : g === 0 ? 'N' : String(g), s.rpm == null ? '' : (Math.round(s.rpm / 10) * 10).toLocaleString('fr-FR') + ' tr/min');
     const lim = SL.limit;
     gtSpd.set(s.speed, s.speed == null ? 'NONE' : String(Math.round(s.speed)), lim ? 'Limite ' + lim : '', lim && s.speed > lim + 3);
     $('gtCons').innerHTML = $('cons').innerHTML;
@@ -4897,8 +5170,15 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     run: null,
     last: store.get('dynoLast', null),
     rpm: [],
-    spd: []
+    spd: [],
+    hist: store.get('dynoHist', [])
   };
+  if (!dyno.hist.length && dyno.last && dyno.last.curve) dyno.hist = [{
+    d: dyno.last.d,
+    ch: dyno.last.ch,
+    nm: dyno.last.nm,
+    curve: dyno.last.curve
+  }];
   const median = a => {
     const b = [...a].sort((x, y) => x - y);
     return b.length ? b[b.length >> 1] : null;
@@ -5150,8 +5430,20 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       rho: +rho.toFixed(3),
       pts: pts.length,
       gps: kGps ? +kGps.toFixed(4) : null,
+      ext: S().ext != null ? Math.round(S().ext) : null,
+      spread: +spread.toFixed(4),
+      from: Math.round(pts[0].x),
+      to: Math.round(run.max),
       curve: curve.map(c => [c[0], +c[1].toFixed(1), +c[2].toFixed(1)])
     };
+    dyno.hist.unshift({
+      d: dyno.last.d,
+      ch: dyno.last.ch,
+      nm: dyno.last.nm,
+      curve: dyno.last.curve
+    });
+    dyno.hist.splice(8);
+    store.set('dynoHist', dyno.hist);
     store.set('dynoLast', dyno.last);
     dyno.state = 'done';
     dyno.rpm = [];
@@ -5166,6 +5458,15 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     if (span < 2200) txt += " La plage mesurée est courte : pour une courbe complète, partez de 1 500 et allez jusqu'à 4 500 tours.";
     say(txt);
   }
+  const DY = {
+    sig: '',
+    plot: null,
+    cursor: null
+  };
+  const DY_X0 = 1000,
+    DY_X1 = 5000,
+    DY_CH = 180,
+    DY_NM = 400;
   function drawDyno() {
     const c = $('dyCanvas');
     if (!c || page !== 'perf' || perf.mode !== 'banc') return;
@@ -5174,44 +5475,56 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
       w,
       h
     } = fitCanvas(c);
+    if (!w || !h) return;
     ctx.clearRect(0, 0, w, h);
-    const L = 40,
-      Rt = 44,
-      Tp = 10,
+    const L = 44,
+      R = 50,
+      Tp = 12,
       B = 24,
-      X = r => L + (r - 1000) / 4000 * (w - L - Rt),
-      Yc = ch => Tp + (1 - ch / 180) * (h - Tp - B),
-      Yn = nm => Tp + (1 - nm / 400) * (h - Tp - B);
-    ctx.font = '500 10px "JetBrains Mono", monospace';
+      pw = w - L - R,
+      ph = h - Tp - B;
+    const X = r => L + (r - DY_X0) / (DY_X1 - DY_X0) * pw,
+      Yc = ch => Tp + (1 - ch / DY_CH) * ph,
+      Yn = nm => Tp + (1 - nm / DY_NM) * ph;
+    DY.plot = {
+      L,
+      pw,
+      w
+    };
     ctx.lineWidth = 1;
-    ctx.strokeStyle = T['--line'];
-    ctx.fillStyle = T['--muted'];
-    for (let r = 1000; r <= 5000; r += 500) {
+    ctx.font = '500 10px "JetBrains Mono", monospace';
+    for (let r = DY_X0; r <= DY_X1; r += 500) {
+      ctx.strokeStyle = r % 1000 ? 'rgba(120,190,240,.05)' : 'rgba(120,190,240,.10)';
       ctx.beginPath();
-      ctx.moveTo(X(r), Tp);
-      ctx.lineTo(X(r), h - B);
+      ctx.moveTo(X(r) + .5, Tp);
+      ctx.lineTo(X(r) + .5, Tp + ph);
       ctx.stroke();
       if (r % 1000 === 0) {
+        ctx.fillStyle = '#7d93a6';
         ctx.textAlign = 'center';
-        ctx.fillText(r / 1000 + 'k', X(r), h - 8);
+        ctx.fillText(r / 1000 + ' 000', X(r), h - 6);
       }
     }
-    for (let ch = 0; ch <= 180; ch += 45) {
+    for (let k = 0; k <= 4; k++) {
+      const ch = DY_CH * k / 4,
+        y = Math.round(Yc(ch)) + .5;
+      ctx.strokeStyle = 'rgba(120,190,240,.08)';
       ctx.beginPath();
-      ctx.moveTo(L, Yc(ch));
-      ctx.lineTo(w - Rt, Yc(ch));
+      ctx.moveTo(L, y);
+      ctx.lineTo(L + pw, y);
       ctx.stroke();
       ctx.textAlign = 'right';
-      ctx.fillStyle = T['--acc'];
-      ctx.fillText(ch + ' ch', L - 4, Yc(ch) + 3);
+      ctx.fillStyle = '#5cd0ff';
+      ctx.fillText(ch + ' ch', L - 6, y + 3);
       ctx.textAlign = 'left';
-      ctx.fillStyle = T['--amber'];
-      ctx.fillText(Math.round(ch / 180 * 400) + ' Nm', w - Rt + 4, Yc(ch) + 3);
+      ctx.fillStyle = '#ffb24a';
+      ctx.fillText(Math.round(DY_NM * k / 4) + ' Nm', L + pw + 6, y + 3);
     }
-    const line = (pts, y, col, dash, wd) => {
+    const line = (pts, y, col, wd, dash) => {
       ctx.strokeStyle = col;
       ctx.lineWidth = wd;
-      ctx.setLineDash(dash);
+      ctx.setLineDash(dash || []);
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       pts.forEach((p, i) => i ? ctx.lineTo(X(p[0]), y(p)) : ctx.moveTo(X(p[0]), y(p)));
       ctx.stroke();
@@ -5219,46 +5532,150 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     };
     const ref = [];
     for (let r = 1000; r <= 4800; r += 100) ref.push([r, torqueRef(r) * r * Math.PI / 30 / 735.5, torqueRef(r)]);
-    line(ref, p => Yc(p[1]), `rgba(${T['--acc-rgb']},.45)`, [5, 5], 1.5);
-    line(ref, p => Yn(p[2]), 'rgba(255,190,90,.45)', [5, 5], 1.5);
-    const d = dyno.last;
-    if (d && d.curve) {
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = T['--acc'];
-      line(d.curve, p => Yc(p[1]), T['--acc'], [], 3);
-      ctx.shadowColor = T['--amber'];
-      line(d.curve, p => Yn(p[2]), T['--amber'], [], 3);
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = T['--text'];
-      ctx.beginPath();
-      ctx.arc(X(d.chRpm), Yc(d.ch), 4, 0, 7);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(X(d.nmRpm), Yn(d.nm), 4, 0, 7);
-      ctx.fill();
+    line(ref, p => Yc(p[1]), 'rgba(92,208,255,.35)', 1.5, [5, 4]);
+    line(ref, p => Yn(p[2]), 'rgba(255,178,74,.35)', 1.5, [5, 4]);
+    const d = dyno.last,
+      prev = dyno.hist[1];
+    if (prev && prev.curve && d) {
+      line(prev.curve, p => Yc(p[1]), 'rgba(231,243,251,.22)', 1.5);
+      line(prev.curve, p => Yn(p[2]), 'rgba(231,243,251,.16)', 1.5);
     }
-    if (dyno.run && dyno.rpm.length) {
-      const r = dyno.rpm[dyno.rpm.length - 1].x;
-      ctx.strokeStyle = T['--text'];
-      ctx.lineWidth = 2;
+    if (!d || !d.curve) {
+      ctx.fillStyle = '#7d93a6';
+      ctx.font = '15px "Saira Semi Condensed", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Aucune mesure pour l\'instant : armez le banc, puis faites un tirage.', L + pw / 2, Tp + ph / 2);
+      return;
+    }
+    const g = ctx.createLinearGradient(0, Tp, 0, Tp + ph);
+    g.addColorStop(0, 'rgba(92,208,255,.22)');
+    g.addColorStop(1, 'rgba(92,208,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(X(d.curve[0][0]), Tp + ph);
+    d.curve.forEach(p => ctx.lineTo(X(p[0]), Yc(p[1])));
+    ctx.lineTo(X(d.curve[d.curve.length - 1][0]), Tp + ph);
+    ctx.closePath();
+    ctx.fill();
+    line(d.curve, p => Yn(p[2]), '#ffb24a', 2.5);
+    line(d.curve, p => Yc(p[1]), '#5cd0ff', 3);
+    const tag = (x, y, txt, col, up) => {
+      ctx.font = '600 12px "Chakra Petch", sans-serif';
+      const tw = ctx.measureText(txt).width + 12,
+        ty = up ? y - 26 : y + 10;
+      const tx = clamp(x - tw / 2, L, L + pw - tw);
+      ctx.fillStyle = 'rgba(5,8,12,.88)';
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(X(r), Tp);
-      ctx.lineTo(X(r), h - B);
+      ctx.rect(tx, ty, tw, 18);
+      ctx.fill();
       ctx.stroke();
-    }
+      ctx.fillStyle = col;
+      ctx.textAlign = 'center';
+      ctx.fillText(txt, tx + tw / 2, ty + 13);
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, 7);
+      ctx.fillStyle = '#05080c';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = col;
+      ctx.stroke();
+    };
+    const xc = X(d.chRpm),
+      yc = Yc(d.ch),
+      xn = X(d.nmRpm),
+      yn = Yn(d.nm);
+    tag(xn, yn, `${d.nm} Nm · ${d.nmRpm.toLocaleString('fr-FR')}`, '#ffb24a', yn < yc + 30 && Math.abs(xn - xc) < 120 ? false : true);
+    tag(xc, yc, `${d.ch} ch · ${d.chRpm.toLocaleString('fr-FR')}`, '#5cd0ff', true);
+  }
+  function dyFmtDate(t) {
+    return new Date(t).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit'
+    });
   }
   function renderDyno() {
     const s = S(),
-      d = dyno.last;
-    $('dyState').textContent = dyno.state === 'run' ? `Mesure en cours… ${Math.round(s.rpm || 0).toLocaleString('fr-FR')} tr/min, gardez le pied au plancher.` : dyno.state === 'armed' ? "Banc armé. En 3e vers 1 500 tr/min, puis pied au plancher jusqu'à 4 500." : d ? `Dernière mesure du ${new Date(d.d).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit'
-    })}.` : 'Touchez « Armer le banc », puis faites un tirage en 3e.';
-    $('dyArm').textContent = dyno.state === 'armed' || dyno.state === 'run' ? 'Annuler' : 'Armer le banc';
-    $('dyCh').innerHTML = d ? `${d.ch}<small>ch</small>` : '--';
-    $('dyNm').innerHTML = d ? `${d.nm}<small>Nm</small>` : '--';
-    $('dyPct').innerHTML = d ? `${Math.round(d.ch / 140 * 100)}<small>%</small>` : '--';
+      d = dyno.last,
+      st = dyno.state,
+      busy = st === 'armed' || st === 'run';
+    const rpm = s.rpm,
+      gear = dyno.run ? (() => {
+        let g = 1;
+        for (let i = 1; i < K.length; i++) if (Math.abs(dyno.run.rg - K[i]) < Math.abs(dyno.run.rg - K[g])) g = i;
+        return g;
+      })() : s.gear;
+    $('dyChip').dataset.s = st === 'run' ? 'run' : st === 'armed' ? 'armed' : d ? 'done' : 'idle';
+    $('dyChip').textContent = st === 'run' ? 'MESURE' : st === 'armed' ? 'ARMÉ' : d ? 'TERMINÉ' : 'PRÊT';
+    const sources = source instanceof ObdSource && source.connected || source === sim;
+    $('dyState').textContent = st === 'run' ? 'Mesure en cours : gardez le pied au plancher.' : st === 'armed' ? sources ? 'Banc armé : suivez les étapes ci-dessous.' : 'Banc armé, mais l\'OBD n\'est pas connecté.' : d ? `Dernière mesure le ${dyFmtDate(d.d)}, en ${d.gear || 3}e.` : 'Armez le banc, puis faites un tirage en 3e.';
+    $('dyArm').textContent = busy ? 'Annuler' : 'Armer le banc';
+    $('dyLive').hidden = !busy;
+    $('dyRes').hidden = busy;
+    if (busy) {
+      $('dyRpm').textContent = rpm == null ? '--' : (Math.round(rpm / 10) * 10).toLocaleString('fr-FR');
+      $('dySpd').textContent = s.speed == null ? '--' : Math.round(s.speed);
+      $('dyGear').textContent = gear == null ? '–' : gear === 0 ? 'N' : gear;
+      $('dyBar').style.width = (clamp(((rpm || 0) - 1500) / 3000, 0, 1) * 100).toFixed(1) + '%';
+      const ready = st === 'run' || rpm > 1100 && rpm < 2300 && gear >= 2 && gear <= 4 && s.speed > 15;
+      const steps = $('dySteps').children,
+        cls = ['done', st === 'run' || ready ? 'done' : 'on', st === 'run' ? rpm > 4000 ? 'done' : 'on' : ready ? 'on' : '', st === 'run' && rpm > 4000 ? 'on' : ''];
+      for (let i = 0; i < 4; i++) if (steps[i].className !== cls[i]) steps[i].className = cls[i];
+    }
+    const cur = DY.cursor || (DY.cursor = (() => {
+      const e = document.createElement('div');
+      e.className = 'dy-cursor';
+      e.hidden = true;
+      $('dyCanvas').parentNode.appendChild(e);
+      return e;
+    })());
+    const showCur = st === 'run' && rpm != null && DY.plot;
+    cur.hidden = !showCur;
+    if (showCur) cur.style.left = (DY.plot.L + clamp((rpm - DY_X0) / (DY_X1 - DY_X0), 0, 1) * DY.plot.pw).toFixed(1) + 'px';
+    const c = $('dyCanvas'),
+      sig = [d ? d.d : 0, dyno.hist.length, c.clientWidth, c.clientHeight].join('|');
+    if (sig === DY.sig) return;
+    DY.sig = sig;
     drawDyno();
+    $('dyLgPrev').hidden = !(d && dyno.hist[1]);
+    if (!d) {
+      $('dyCh').innerHTML = '--';
+      $('dyNm').innerHTML = '--';
+      $('dyChAt').textContent = '';
+      $('dyNmAt').textContent = '';
+      $('dyVerdict').hidden = true;
+      $('dyCmp').textContent = '';
+      $('dyCond').innerHTML = '';
+      $('dyHist').innerHTML = '';
+      return;
+    }
+    $('dyCh').innerHTML = `${d.ch}<small>ch</small>`;
+    $('dyChAt').textContent = `à ${d.chRpm.toLocaleString('fr-FR')} tr/min`;
+    $('dyNm').innerHTML = `${d.nm}<small>Nm</small>`;
+    $('dyNmAt').textContent = `à ${d.nmRpm.toLocaleString('fr-FR')} tr/min`;
+    const pct = d.ch / 140,
+      v = pct > 1.1 ? 'high' : pct >= 0.9 ? 'ok' : pct >= 0.8 ? 'low' : 'bad';
+    $('dyVerdict').hidden = false;
+    $('dyVerdict').dataset.v = v;
+    $('dyPct').textContent = Math.round(pct * 100) + ' %';
+    $('dyVerdictTxt').textContent = {
+      high: 'Au-dessus des 140 ch d\'origine : pente, vent ou moteur reprogrammé ?',
+      ok: 'Conforme aux 140 ch d\'origine',
+      low: 'Un peu en dessous de l\'origine : refaites un passage sur du plat',
+      bad: 'Nettement en dessous : refaites un passage, puis faites vérifier'
+    }[v];
+    const prev = dyno.hist[1];
+    if (prev) {
+      const dc = d.ch - prev.ch,
+        dn = d.nm - prev.nm,
+        sg = x => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x);
+      $('dyCmp').textContent = `${sg(dc)} ch et ${sg(dn)} Nm par rapport au ${dyFmtDate(prev.d)}`;
+    } else $('dyCmp').textContent = 'Première mesure enregistrée.';
+    const rel = d.spread == null ? null : d.spread < 0.015 && d.to - d.from >= 2500 && d.gps ? ['Bonne', 'good'] : d.spread < 0.025 && d.to - d.from >= 1800 ? ['Moyenne', ''] : ['Faible', 'warn'];
+    const row = (k, val, cl) => `<dt>${k}</dt><dd class="${cl || ''}">${val}</dd>`;
+    $('dyCond').innerHTML = row('Rapport', (d.gear || '?') + 'e') + row('Plage', d.from ? `${(Math.round(d.from / 100) * 100).toLocaleString('fr-FR')}–${(Math.round(d.to / 100) * 100).toLocaleString('fr-FR')}` : '--') + row('Air', d.ext != null ? d.ext + ' °C' : '--') + row('Mesures', d.pts || '--') + row('Compteur', d.gps ? `calé GPS (${d.gps > 1 ? '+' : '−'}${fr(Math.abs(d.gps - 1) * 100, 1)} %)` : 'non calé', d.gps ? 'good' : 'warn') + row('Fiabilité', rel ? rel[0] : '--', rel ? rel[1] : '');
+    $('dyHist').innerHTML = dyno.hist.slice(0, 6).map((x, i) => `<i class="${i === 0 ? 'cur' : ''}">${dyFmtDate(x.d)} · ${x.ch} ch</i>`).join('');
   }
   $('dyArm').addEventListener('click', () => {
     if (dyno.state === 'armed' || dyno.state === 'run') {
@@ -9210,7 +9627,7 @@ Actualité en direct : tu as un vrai accès au direct. Tes connaissances interne
   }
   function drawGMeter() {
     const c = $('gcircle');
-    if (!c || page !== 'perf') return;
+    if (!c || page !== 'perf' || perf.mode === 'banc') return;
     const {
       ctx,
       w,

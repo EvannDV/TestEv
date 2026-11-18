@@ -51,7 +51,14 @@ patch('Autorisez la position pour ce site dans Chrome, puis touchez ici.', "Auto
 patch('Autorisez-la dans Chrome, puis touchez la carte.', 'Autorisez-la dans les réglages Android, puis touchez la carte.');
 const ATTRIB = '© OpenFreeMap · OpenMapTiles · contributeurs OpenStreetMap · OSRM';
 if (html.split(ATTRIB).length !== 2) throw new Error('retouche : crédit de la carte introuvable');
-const outHtml = html.replace(ATTRIB, '© Esri · contributeurs OpenStreetMap · OSRM');
+let outHtml = html.replace(ATTRIB, '© Esri · contributeurs OpenStreetMap · OSRM');
+// nouveau panneau du banc de puissance
+{
+  const a = outHtml.indexOf('<div class="dyno" id="dynoBox">'), b = outHtml.indexOf('<div class="panel records">', a);
+  if (a < 0 || b < 0) throw new Error('retouche : panneau du banc introuvable');
+  const end = outHtml.lastIndexOf('</div>', outHtml.lastIndexOf('</div>', b) - 1); // fin de #dynoBox (avant la fermeture de .chrono)
+  outHtml = outHtml.slice(0, a) + fs.readFileSync(path.join(HERE, 'dyno.html'), 'utf8').trim() + outHtml.slice(end + 6);
+}
 
 // Remplace le texte compris entre deux repères (chacun présent une seule fois)
 const patchRange = (from, until, to) => {
@@ -107,6 +114,11 @@ patch("while (this.connected) { for (const p of FAST) await this.read(p); await 
 patch("const am = (Pw / v - 0.5 * 1.2 * DYNO_CDA * v * v - DYNO_CRR * DYNO_M * 9.81) / DYNO_M;",
   "const am = (Pw / v - 0.5 * 1.2 * DYNO_CDA * v * v - DYNO_CRR * DYNO_M * 9.81) / (DYNO_M * dynoLambda(K[3]));");
 
+/* ---------- nouveau design : cadrans et banc ---------- */
+patchRange('function gtDial(svg, max, step, red, unit, withBig) {', "$('spdTrack').setAttribute", fs.readFileSync(path.join(HERE, 'dials.js'), 'utf8') + '\n');
+patchRange('function drawDyno() {', "$('dyArm').addEventListener", fs.readFileSync(path.join(HERE, 'dynoui.js'), 'utf8') + '\n');
+// le banc occupe toute la page Perf : le G-mètre (caché) ne se dessine plus en mode banc
+patch("const c = $('gcircle'); if (!c || page !== 'perf') return;", "const c = $('gcircle'); if (!c || page !== 'perf' || perf.mode === 'banc') return;");
 /* ---------- conversion pour le vieux moteur web ---------- */
 const report = [];
 const oneStyle = postcss.parse(css);
@@ -117,6 +129,7 @@ oneStyle.walkRules(r => {
   if (!keep.length) r.remove(); else if (keep.length !== r.selectors.length) r.selectors = keep;
 });
 oneStyle.walkDecls(/^(-webkit-)?backdrop-filter$/, d => d.remove());
+oneStyle.append(fs.readFileSync(path.join(HERE, 'theme.css'), 'utf8'));
 oneStyle.append('.panel,.top,.controls{contain:layout style}#fxBack,#fxFront,.dna,#modeFx{display:none!important}.ring,.core i:nth-child(1),.holo::before{animation:none!important}');
 const ported = portCss(oneStyle.toString(), report);
 let outCss = ported.css

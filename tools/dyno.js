@@ -18,7 +18,8 @@ function dynoRho() { // kg/m³
   const p = raw['33'] ? raw['33'][0] : 101.3, t = s && s.ext != null ? s.ext : 15;
   return p * 1000 / (287.05 * (t + 273.15));
 }
-const dyno = { state: 'idle', run: null, last: store.get('dynoLast', null), rpm: [], spd: [] };
+const dyno = { state: 'idle', run: null, last: store.get('dynoLast', null), rpm: [], spd: [], hist: store.get('dynoHist', []) };
+if (!dyno.hist.length && dyno.last && dyno.last.curve) dyno.hist = [{ d: dyno.last.d, ch: dyno.last.ch, nm: dyno.last.nm, curve: dyno.last.curve }];
 const median = a => { const b = [...a].sort((x, y) => x - y); return b.length ? b[b.length >> 1] : null; };
 // Couple au moteur (Nm) correspondant à un régime r qui monte de dr tr/min par seconde, rapport rg
 function dynoTorque(r, dr, rg, rho) {
@@ -154,7 +155,9 @@ function dynoFinish(reason) {
   const pk = curve.reduce((m, c) => c[1] > m[1] ? c : m), tk = curve.reduce((m, c) => c[2] > m[2] ? c : m);
   let gear = 1; for (let i = 1; i < K.length; i++) if (Math.abs(rgObd - K[i]) < Math.abs(rgObd - K[gear])) gear = i;
   dyno.last = { d: Date.now(), ch: Math.round(pk[1]), chRpm: pk[0], nm: Math.round(tk[2]), nmRpm: tk[0], gear, rg: +rg.toFixed(2), rho: +rho.toFixed(3), pts: pts.length, gps: kGps ? +kGps.toFixed(4) : null,
+    ext: S().ext != null ? Math.round(S().ext) : null, spread: +spread.toFixed(4), from: Math.round(pts[0].x), to: Math.round(run.max),
     curve: curve.map(c => [c[0], +c[1].toFixed(1), +c[2].toFixed(1)]) };
+  dyno.hist.unshift({ d: dyno.last.d, ch: dyno.last.ch, nm: dyno.last.nm, curve: dyno.last.curve }); dyno.hist.splice(8); store.set('dynoHist', dyno.hist);
   store.set('dynoLast', dyno.last); dyno.state = 'done'; dyno.rpm = []; dyno.spd = []; renderDyno();
   const pct = dyno.last.ch / 140, d = dyno.last;
   let txt = `Banc terminé en ${gear}e : ${d.ch} chevaux à ${d.chRpm.toLocaleString('fr-FR')} tours, et ${d.nm} newtons-mètres à ${d.nmRpm.toLocaleString('fr-FR')} tours. `;

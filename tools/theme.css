@@ -1,0 +1,141 @@
+/* ============================================================
+   THÈME JARVIS (autoradio) : un seul style, cyan glacier sur anthracite.
+   Ajouté après le CSS d'origine ; mêmes noms de classes, mêmes variables.
+   Pas de flou, pas de filtre, pas d'animation permanente : le processeur est modeste.
+   ============================================================ */
+:root[data-dna="N"]{
+  --bg:#05080c; --bg-rgb:5,8,12; --bg-glow:#0b1d2b; --panel:#0d141c; --panel-2:#080d13; --panel-rgb:13,20,28; --panel2-rgb:8,13,19;
+  --line:#172331; --line-hi:#26394b; --acc:#5cd0ff; --acc-rgb:92,208,255; --acc-dim:#2f86ad;
+  --text:#e7f3fb; --muted:#7d93a6; --ice:#a4dcff; --ok:#3ddc97; --amber:#ffb24a; --red:#ff5468;
+}
+:root[data-dna="N"] body{background:radial-gradient(ellipse 70% 55% at 50% -8%,#0f2333 0%,rgba(15,35,51,0) 70%),linear-gradient(180deg,#070b10,#04060a) fixed}
+
+/* ---------- panneaux ---------- */
+:root[data-dna="N"] .panel{border-radius:18px;border:1px solid rgba(120,190,240,.10);
+  background:linear-gradient(180deg,#0f1822 0%,#0a1018 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 30px rgba(0,0,0,.45)}
+.label{color:var(--muted);letter-spacing:.16em}
+.note{color:#6f8496}
+
+/* ---------- en-tête ---------- */
+:root[data-dna="N"] .brand-name{color:var(--acc);font-weight:600;letter-spacing:.34em}
+.tabs{display:flex;background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:14px;padding:3px;gap:2px}
+.top{flex-wrap:nowrap}
+.tabs{flex:none}
+:root[data-dna="N"] .tab{border:0;border-radius:10px;padding:6px 11px;font-size:13px;letter-spacing:.1em;color:var(--muted)}
+:root[data-dna="N"] .tab[aria-selected="true"]{color:var(--text);border:0;background:linear-gradient(180deg,rgba(var(--acc-rgb),.22),rgba(var(--acc-rgb),.10));box-shadow:inset 0 0 0 1px rgba(var(--acc-rgb),.35)}
+.badge{border-radius:10px;padding:4px 9px}
+.badge.live{background:rgba(61,220,151,.08)}
+:root[data-dna="N"] .icon-btn{border-radius:10px;border-color:var(--line-hi);background:rgba(255,255,255,.02)}
+.clock .time{font-weight:500;letter-spacing:.04em}
+
+/* ---------- boutons, champs, puces ---------- */
+:root[data-dna="N"] .btn{border-radius:10px;border-color:var(--line-hi);background:rgba(255,255,255,.02);color:var(--ice)}
+:root[data-dna="N"] .btn.primary{background:linear-gradient(180deg,#7fdcff,#43b8ea);border-color:#5cd0ff;color:#04121b;font-weight:600}
+.seg-ctrl{display:flex;border-radius:12px;overflow:hidden;border-color:var(--line-hi);background:rgba(255,255,255,.02)}
+.seg-ctrl button{font-size:14px;padding:7px 16px}
+.seg-ctrl button[aria-pressed="true"]{background:linear-gradient(180deg,rgba(var(--acc-rgb),.30),rgba(var(--acc-rgb),.14));color:var(--text)}
+.state{border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.03)}
+#q{border-radius:12px;background:#070c12;border-color:var(--line-hi)}
+.mic{border-radius:12px}
+
+/* ---------- conduite : colonne centrale ---------- */
+:root[data-dna="N"] .gt-info{padding:8px 16px}
+.gt-row{display:flex;border-bottom:1px solid var(--line);padding:9px 0}
+.gt-row .label{align-self:center}
+.gt-row b{font-weight:500;color:var(--text)}
+:root[data-dna="N"] .turn,:root[data-dna="N"] .eta{border-radius:14px;background:rgba(7,12,18,.9);border-color:var(--line-hi)}
+
+/* ---------- cadrans ---------- */
+.gt-big{font-family:var(--f-display);font-weight:500;font-size:88px;fill:var(--text);text-anchor:middle;font-variant-numeric:tabular-nums}
+.gt-big.none{font-size:34px;letter-spacing:.1em;fill:var(--muted)}
+.gt-unit{font-family:var(--f-mono);font-size:12px;letter-spacing:5px;fill:var(--muted);text-anchor:middle}
+.gt-sub{font-family:var(--f-display);font-size:21px;fill:var(--ice);text-anchor:middle;font-variant-numeric:tabular-nums}
+.gt-sub.over{fill:var(--red);font-weight:600}
+.gt-num{font-family:var(--f-display);font-size:19px;fill:#9fb4c4;text-anchor:middle;dominant-baseline:central}
+.gt-arc{transition:stroke-dasharray .22s linear}
+.gt-arc.hot{stroke:var(--red)}
+.gt-needle{transition:transform .22s linear}
+
+/* ---------- moteur, garage ---------- */
+.srow{border-bottom-color:var(--line)}
+.srow b{font-weight:500}
+
+/* ---------- console Jarvis ---------- */
+.msg time{color:#566b7d}
+
+/* ---------- fenêtre holographique (briefing) ---------- */
+:root[data-dna="N"] .holo{border-radius:18px;border:1px solid rgba(var(--acc-rgb),.35);background:linear-gradient(180deg,rgba(14,26,38,.97),rgba(8,14,21,.97));box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.holo h2{color:var(--text)}
+.holo .x{border-radius:10px}
+
+/* ============================================================
+   BANC DE PUISSANCE : pleine largeur, courbes à gauche, tout le reste à droite
+   ============================================================ */
+.perf .chrono.banc{grid-column:1 / -1}
+.chrono.banc ~ .records{display:none}
+.chrono.banc{display:flex;flex-direction:column;gap:10px;padding:12px 16px}
+.dyno{display:flex;flex-direction:column;flex:1;min-height:0}
+.dy-main{display:flex;flex:1;min-height:0;gap:16px}
+.dy-chart{position:relative;flex:1.65;min-width:0;display:flex;flex-direction:column;gap:6px}
+.dy-legend{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.dy-legend span{display:flex;align-items:center;gap:6px}
+.dy-legend span::before{content:"";display:block;width:16px;height:3px;border-radius:2px}
+.dy-legend .lg-ch::before{background:var(--acc)}
+.dy-legend .lg-nm::before{background:var(--amber)}
+.dy-legend .lg-ref::before{background:repeating-linear-gradient(90deg,#8aa0b2 0 4px,transparent 4px 7px);height:2px}
+.dy-legend .lg-prev::before{background:rgba(231,243,251,.35)}
+#dyCanvas{width:100%;flex:1;min-height:0;display:block}
+.dy-cursor{position:absolute;top:22px;bottom:22px;width:2px;margin-left:-1px;background:var(--text);opacity:.85;box-shadow:0 0 10px rgba(var(--acc-rgb),.8);pointer-events:none}
+.dy-side{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;border-left:1px solid var(--line);padding-left:16px;overflow:hidden}
+.dy-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dy-chip{font-family:var(--f-mono);font-size:11px;letter-spacing:.18em;padding:4px 10px;border-radius:999px;border:1px solid var(--line-hi);color:var(--muted)}
+.dy-chip[data-s="armed"]{color:var(--amber);border-color:var(--amber);background:rgba(255,178,74,.08)}
+.dy-chip[data-s="run"]{color:#04121b;border-color:var(--acc);background:var(--acc)}
+.dy-chip[data-s="done"]{color:var(--ok);border-color:var(--ok);background:rgba(61,220,151,.08)}
+.dy-state{font-size:14px;line-height:1.35;color:var(--text);min-height:19px}
+.dy-live{display:flex;flex-direction:column;gap:10px}
+.dy-gauge{display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.dy-gauge div{display:flex;flex-direction:column;align-items:flex-start}
+.dy-gauge b{font-family:var(--f-display);font-weight:500;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.dy-gauge .dy-rpm b{font-size:40px;color:var(--acc)}
+.dy-gauge small{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+.dy-bar{position:relative;height:10px;border-radius:6px;background:#132230;margin:2px 0 16px}
+.dy-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;background:linear-gradient(90deg,#1f86c2,#8fe6ff)}
+.dy-bar span{position:absolute;top:14px;font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.dy-bar span.r{right:0}
+.dy-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:st}
+.dy-steps li{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);counter-increment:st}
+.dy-steps li::before{content:counter(st);flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line-hi);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:11px}
+.dy-steps li.on{color:var(--text)}
+.dy-steps li.on::before{border-color:var(--acc);color:var(--acc);box-shadow:0 0 0 3px rgba(var(--acc-rgb),.15)}
+.dy-steps li.done{color:#a9bccb}
+.dy-steps li.done::before{content:"✓";border-color:var(--ok);background:var(--ok);color:#04121b}
+.dy-res{display:flex;flex-direction:column;gap:9px;min-height:0}
+.dy-big{display:flex;gap:12px}
+.dy-big > div{flex:1;display:flex;flex-direction:column;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid var(--line)}
+.dy-big b{font-family:var(--f-display);font-weight:600;font-size:34px;line-height:1.05;font-variant-numeric:tabular-nums}
+.dy-big b small{font-size:14px;color:var(--muted);font-weight:400;margin-left:4px}
+.dy-big .p b{color:var(--acc)}
+.dy-big .t b{color:var(--amber)}
+.dy-big > div > small{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.dy-verdict{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid var(--line-hi)}
+.dy-verdict b{font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.dy-verdict span{font-size:13.5px;line-height:1.25}
+.dy-verdict[data-v="ok"]{border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.07)}
+.dy-verdict[data-v="ok"] b{color:var(--ok)}
+.dy-verdict[data-v="low"]{border-color:rgba(255,178,74,.5);background:rgba(255,178,74,.07)}
+.dy-verdict[data-v="low"] b{color:var(--amber)}
+.dy-verdict[data-v="bad"]{border-color:rgba(255,84,104,.5);background:rgba(255,84,104,.07)}
+.dy-verdict[data-v="bad"] b,.dy-verdict[data-v="high"] b{color:var(--red)}
+.dy-verdict[data-v="high"]{border-color:rgba(164,220,255,.5)}
+.dy-cmp{font-size:13px;color:var(--ice);min-height:17px}
+.dy-cond{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:4px 10px;margin:0;font-size:12.5px}
+.dy-cond dt{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);align-self:center}
+.dy-cond dd{margin:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dy-cond dd.good{color:var(--ok)}
+.dy-cond dd.warn{color:var(--amber)}
+.dy-hist{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto}
+.dy-hist i{font-style:normal;font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line-hi);color:#a9bccb}
+.dy-hist i.cur{border-color:var(--acc);color:var(--acc)}
+.dy-empty{font-size:14px;color:var(--muted);line-height:1.4}

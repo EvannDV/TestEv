@@ -1,0 +1,36 @@
+<div class="dyno" id="dynoBox">
+          <div class="dy-main">
+            <div class="dy-chart">
+              <div class="dy-legend"><span class="lg-ch">Puissance</span><span class="lg-nm">Couple</span><span class="lg-ref">Origine 140 ch · 320 Nm</span><span class="lg-prev" id="dyLgPrev" hidden>Mesure précédente</span></div>
+              <canvas id="dyCanvas" aria-label="Courbes de puissance et de couple"></canvas>
+            </div>
+            <div class="dy-side">
+              <div class="dy-head"><span class="dy-chip" id="dyChip">PRÊT</span><button class="btn primary" id="dyArm" type="button">Armer le banc</button></div>
+              <div class="dy-state" id="dyState">--</div>
+              <div class="dy-live" id="dyLive" hidden>
+                <div class="dy-gauge">
+                  <div class="dy-rpm"><b id="dyRpm">--</b><small>tr/min</small></div>
+                  <div><b id="dyGear">–</b><small>rapport</small></div>
+                  <div><b id="dySpd">--</b><small>km/h</small></div>
+                </div>
+                <div class="dy-bar"><i id="dyBar"></i><span>1 500</span><span class="r">4 500 tr/min</span></div>
+                <ol class="dy-steps" id="dySteps">
+                  <li>Banc armé</li>
+                  <li>3e engagée vers 1 500 tr/min, route plate</li>
+                  <li>Pied au plancher</li>
+                  <li>Relâchez vers 4 500 tr/min</li>
+                </ol>
+              </div>
+              <div class="dy-res" id="dyRes">
+                <div class="dy-big">
+                  <div class="p"><span class="label">Puissance max</span><b id="dyCh">--</b><small id="dyChAt"></small></div>
+                  <div class="t"><span class="label">Couple max</span><b id="dyNm">--</b><small id="dyNmAt"></small></div>
+                </div>
+                <div class="dy-verdict" id="dyVerdict" hidden><b id="dyPct">--</b><span id="dyVerdictTxt"></span></div>
+                <div class="dy-cmp" id="dyCmp"></div>
+                <dl class="dy-cond" id="dyCond"></dl>
+                <div class="dy-hist"><span class="label">Historique</span><span id="dyHist"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>

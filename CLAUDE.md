@@ -132,6 +132,25 @@ puissance max à ±1,5 % sur 3e, 4e, départ à 2 200, montée douce, adaptateur
 faux de 3 % : +5 % sans GPS, -0,7 % calé GPS. Erreurs réelles non simulées : pente, vent,
 masse (passagers, carburant), pertes réelles de transmission.
 
+## Nouveau design (v3.2, 18 nov. 2026)
+
+À la demande de l'utilisateur : design refait, plus joli, et banc plus clair.
+- `tools/theme.css` (ajouté à la fin du CSS, avant conversion) : thème Jarvis cyan glacier
+  sur anthracite (variables `:root[data-dna="N"]`), panneaux arrondis, onglets en pilules,
+  boutons, puces d'état, console, fenêtre holographique. Pas de flou ni de filtre.
+- `tools/dials.js` remplace `gtDial`/`gtUpdate` : arc lumineux (`stroke-dasharray` sur
+  `pathLength=1000`), grand chiffre au centre (rapport sur le compte-tours, vitesse sur
+  l'autre), régime en sous-titre, zone rouge, aiguille courte sur le bord.
+- Banc : `tools/dyno.html` (balisage) + `tools/dynoui.js` (`drawDyno`, `renderDyno`). Page
+  Perf pleine largeur en mode banc (G-mètre masqué et plus dessiné). À gauche : courbes avec
+  légende, surface sous la puissance, pics étiquetés, origine en pointillés, mesure
+  précédente en pâle. À droite : puce d'état, pendant la mesure régime / rapport / vitesse,
+  barre 1 500 -> 4 500 et 4 étapes qui se cochent ; après : puissance et couple max, % de
+  l'origine avec verdict, écart avec la mesure précédente, conditions (rapport, plage, air,
+  nombre de mesures, compteur calé GPS ou non, fiabilité), historique (`store 'dynoHist'`).
+  Pendant la mesure seul un trait HTML (curseur) bouge : la toile n'est redessinée qu'à la fin.
+Coût par image inchangé (environ 10 ms sur la page Conduite, processeur ralenti 6×).
+
 ## Mises à jour intégrées (v2.1)
 
 `Updater.java` lit `version.json` (généré par `android/build.sh` à partir de `VERSION_CODE` /
@@ -154,7 +173,7 @@ reconnaissance sur l'autoradio. Le Diagnostic affiche les lignes VOIX et MICRO.
 1. Fait : v3.0 = interface Giulietta + OBD Bluetooth + carte Esri/OSM + voix et micro Android
    + mises à jour intégrées. Le CAN est retiré de l'appli.
 2. v3.0 confirmée par l'utilisateur sur l'autoradio (« ça marche »).
-3. **En attente de l'utilisateur** : essai de la v3.1 (fluidité, banc de puissance réel).
+3. **En attente de l'utilisateur** : essai de la v3.2 (nouveau design, banc réel, fluidité).
 
 ## Règles
 
