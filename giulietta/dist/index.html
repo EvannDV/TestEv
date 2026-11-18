@@ -1269,6 +1269,83 @@ button{cursor:pointer}
 .dy-hist i{font-style:normal;font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line-hi);color:#a9bccb}
 .dy-hist i.cur{border-color:var(--acc);color:var(--acc)}
 .dy-empty{font-size:14px;color:var(--muted);line-height:1.4}
+/* ============================================================
+   SANS MUSIQUE + LISIBILITÉ SUR PETIT ÉCRAN (v3.3)
+   ============================================================ */
+.jarvis .music,.navp .player{display:none!important}
+.navp{grid-template-columns:1fr!important}
+.jarvis{grid-template-columns:60px minmax(0,1.55fr) minmax(0,1fr)!important;padding:10px 16px}
+/* textes plus grands partout */
+.label{font-size:12px;letter-spacing:.12em}
+.note{font-size:14px}
+:root[data-dna="N"] .brand-name{letter-spacing:.24em;font-size:19px}
+:root[data-dna="N"] .tab{font-size:15px;padding:7px 12px;letter-spacing:.06em}
+.badge{font-size:11px;padding:5px 9px}
+.clock .time{font-size:23px}
+:root[data-dna="N"] .icon-btn{height:38px;min-width:38px}
+:root[data-dna="N"] .btn{font-size:12.5px;padding:9px 13px}
+/* console Jarvis : messages plus grands, sans l'heure */
+.log{height:96px;font-size:17.5px;line-height:1.32}
+.msg{display:block}
+.msg time{display:none}
+#q{font-size:17px;padding:11px 12px}
+.mic{width:50px}
+.quick .btn{font-size:12px;padding:8px 11px}
+/* conduite */
+.gt-big{font-size:100px}
+.gt-big.none{font-size:38px}
+.gt-unit{font-size:14px}
+.gt-sub{font-size:25px}
+.gt-num{font-size:22px}
+.gt-row{padding:11px 0}
+.gt-row .label{font-size:13px}
+.gt-row b{font-size:28px}
+.gt-row b small{font-size:14px}
+:root[data-dna="N"] .turn b{font-size:28px}
+:root[data-dna="N"] .turn span{font-size:16px}
+/* moteur */
+.srow{padding:8px 0}
+.srow > span:first-child{font-size:17px}
+.srow b{font-size:23px}
+.srow b small{font-size:13px}
+.srange{font-size:11.5px}
+.state{font-size:11px}
+/* perf, garage */
+.stat b{font-size:25px}
+.seg-ctrl button{font-size:16px;padding:8px 16px}
+.dy-state{font-size:15.5px}
+.dy-steps li{font-size:15.5px}
+.dy-cond{font-size:14px}
+.dy-cond dt{font-size:11px}
+.dy-legend{font-size:11.5px}
+/* page Conduite : plus de mini-carte, cinq grandes infos au centre (la carte reste en page Nav) */
+:root[data-dna="N"] .drive{grid-template-rows:minmax(0,1fr);grid-template-areas:"rpm info spd"}
+:root[data-dna="N"] .drive > .mapp{display:none}
+:root[data-dna="N"] .gt-info{display:flex;flex-direction:column;justify-content:space-around;padding:6px 18px}
+.gt-row{padding:6px 0}
+.gt-row b{font-size:27px}
+.gt-row.turnrow b{font-size:22px;color:var(--acc)}
+.gt-row.turnrow span.st{display:block;font-size:14px;color:var(--muted);text-align:right;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* en-tête sur une ligne */
+:root[data-dna="N"] .icon-btn{white-space:nowrap}
+:root[data-dna="N"] .tab{padding:7px 10px}
+.clock .time{font-size:22px}
+/* banc : colonne de droite plus compacte */
+.dy-side{}
+.dy-side>*+*{
+  margin-top:6px !important;
+}
+.dy-side>[hidden]:first-child+*{
+  margin-top:0 !important;
+}
+.dy-big b{font-size:30px}
+.dy-big > div{padding:6px 10px}
+.dy-verdict{padding:5px 10px}
+.dy-verdict b{font-size:20px}
+.dy-verdict span{font-size:13px}
+.dy-cmp{font-size:13px}
+.dy-cond{grid-gap:3px 10px;gap:3px 10px;font-size:13.5px}
+.dy-hist i{font-size:11px;padding:2px 7px}
 .panel,.top,.controls{contain:layout style}
 #fxBack,#fxFront,.dna,#modeFx{display:none!important}
 .ring,.core i:nth-child(1),.holo::before{animation:none!important}
@@ -1348,6 +1425,9 @@ button{cursor:pointer}
         <div class="gt-row"><span class="label">Conso</span><b id="gtCons">--</b></div>
         <div class="gt-row"><span class="label">Autonomie</span><b id="gtRange">--</b></div>
         <div class="gt-row"><span class="label">Huile · eau</span><b id="gtTemp">--</b></div>
+        <div class="gt-row"><span class="label">Turbo</span><b id="gtBoost">--</b></div>
+        <div class="gt-row"><span class="label">Batterie</span><b id="gtBatt">--</b></div>
+        <div class="gt-row turnrow" id="gtTurnRow" hidden><span class="label">Virage</span><span><b id="gtTurn">--</b><span class="st" id="gtTurnSt"></span></span></div>
       </div>
 
       <div class="panel wx-spd" id="wxSpdP">
@@ -1935,6 +2015,83 @@ if (window.Android && window.Android.ble) {
     });
   } catch (e) {
     console.error('Bluetooth : ' + e.message);
+  }
+}
+if (window.Android && window.Android.gpsStart) {
+  const watchers = {};
+  let wid = 0,
+    last = null;
+  window.__gpsFix = (lat, lon, acc, spd, hdg, t) => {
+    last = {
+      coords: {
+        latitude: lat,
+        longitude: lon,
+        accuracy: acc,
+        speed: spd,
+        heading: hdg,
+        altitude: null,
+        altitudeAccuracy: null
+      },
+      timestamp: t
+    };
+    Object.keys(watchers).forEach(k => {
+      try {
+        watchers[k].ok(last);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  };
+  window.__gpsErr = (code, msg) => Object.keys(watchers).forEach(k => {
+    const w = watchers[k];
+    if (w.err) try {
+      w.err({
+        code,
+        message: msg,
+        PERMISSION_DENIED: 1,
+        POSITION_UNAVAILABLE: 2,
+        TIMEOUT: 3
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  window.__gpsSats = (seen, used) => {
+    const m = document.getElementById('mapMsg');
+    if (m && !m.hidden && /Recherche du signal GPS/.test(m.textContent)) m.textContent = `Recherche du signal GPS… ${used} satellite${used > 1 ? 's' : ''} utilisé${used > 1 ? 's' : ''} sur ${seen} vu${seen > 1 ? 's' : ''}`;
+  };
+  const geo = {
+    watchPosition(ok, err) {
+      const id = ++wid;
+      watchers[id] = {
+        ok,
+        err
+      };
+      window.Android.gpsStart();
+      if (last) setTimeout(() => watchers[id] && ok(last), 0);
+      return id;
+    },
+    clearWatch(id) {
+      delete watchers[id];
+      if (!Object.keys(watchers).length) window.Android.gpsStop();
+    },
+    getCurrentPosition(ok, err) {
+      const id = geo.watchPosition(p => {
+        geo.clearWatch(id);
+        ok(p);
+      }, e => {
+        geo.clearWatch(id);
+        if (err) err(e);
+      });
+    }
+  };
+  try {
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: geo
+    });
+  } catch (e) {
+    console.error('GPS : ' + e.message);
   }
 }
 if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', () => {
@@ -3611,6 +3768,15 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     $('gtCons').innerHTML = $('cons').innerHTML;
     $('gtRange').innerHTML = $('range').innerHTML;
     $('gtTemp').textContent = s.oil == null || s.coolant == null ? 'NONE' : `${fr(s.oil)}° · ${fr(s.coolant)}°`;
+    $('gtBoost').innerHTML = s.boost == null ? 'NONE' : `${fr(s.boost, 2)}<small>bar</small>`;
+    $('gtBatt').innerHTML = s.batt == null ? 'NONE' : `${fr(s.batt, 1)}<small>V</small>`;
+    const tr = $('gtTurnRow'),
+      on = !!nav.route;
+    if (tr.hidden === on) tr.hidden = !on;
+    if (on) {
+      $('gtTurn').textContent = $('turnDist').textContent;
+      $('gtTurnSt').textContent = $('turnStreet').textContent;
+    }
   }
   $('spdTrack').setAttribute('d', arc(104, A0, A0 + SW));
   for (let i = 0; i < 32; i++) {
@@ -5674,7 +5840,7 @@ if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', 
     } else $('dyCmp').textContent = 'Première mesure enregistrée.';
     const rel = d.spread == null ? null : d.spread < 0.015 && d.to - d.from >= 2500 && d.gps ? ['Bonne', 'good'] : d.spread < 0.025 && d.to - d.from >= 1800 ? ['Moyenne', ''] : ['Faible', 'warn'];
     const row = (k, val, cl) => `<dt>${k}</dt><dd class="${cl || ''}">${val}</dd>`;
-    $('dyCond').innerHTML = row('Rapport', (d.gear || '?') + 'e') + row('Plage', d.from ? `${(Math.round(d.from / 100) * 100).toLocaleString('fr-FR')}–${(Math.round(d.to / 100) * 100).toLocaleString('fr-FR')}` : '--') + row('Air', d.ext != null ? d.ext + ' °C' : '--') + row('Mesures', d.pts || '--') + row('Compteur', d.gps ? `calé GPS (${d.gps > 1 ? '+' : '−'}${fr(Math.abs(d.gps - 1) * 100, 1)} %)` : 'non calé', d.gps ? 'good' : 'warn') + row('Fiabilité', rel ? rel[0] : '--', rel ? rel[1] : '');
+    $('dyCond').innerHTML = row('Rapport', (d.gear || '?') + 'e') + row('Plage', d.from ? `${(Math.round(d.from / 100) * 100).toLocaleString('fr-FR')}–${(Math.round(d.to / 100) * 100).toLocaleString('fr-FR')}` : '--') + row('Air', d.ext != null ? d.ext + ' °C' : '--') + row('Mesures', d.pts || '--') + row('Compteur', d.gps ? `calé GPS` : 'non calé', d.gps ? 'good' : 'warn') + row('Fiabilité', rel ? rel[0] : '--', rel ? rel[1] : '');
     $('dyHist').innerHTML = dyno.hist.slice(0, 6).map((x, i) => `<i class="${i === 0 ? 'cur' : ''}">${dyFmtDate(x.d)} · ${x.ch} ch</i>`).join('');
   }
   $('dyArm').addEventListener('click', () => {

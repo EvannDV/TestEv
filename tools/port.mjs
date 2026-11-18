@@ -52,6 +52,14 @@ patch('Autorisez-la dans Chrome, puis touchez la carte.', 'Autorisez-la dans les
 const ATTRIB = '© OpenFreeMap · OpenMapTiles · contributeurs OpenStreetMap · OSRM';
 if (html.split(ATTRIB).length !== 2) throw new Error('retouche : crédit de la carte introuvable');
 let outHtml = html.replace(ATTRIB, '© Esri · contributeurs OpenStreetMap · OSRM');
+// page Conduite : cinq grandes infos au centre (et le prochain virage pendant un itinéraire)
+{
+  const from = '<div class="gt-row"><span class="label">Huile · eau</span><b id="gtTemp">--</b></div>';
+  if (outHtml.split(from).length !== 2) throw new Error('retouche : infos de conduite introuvables');
+  outHtml = outHtml.replace(from, from + '\n        <div class="gt-row"><span class="label">Turbo</span><b id="gtBoost">--</b></div>'
+    + '\n        <div class="gt-row"><span class="label">Batterie</span><b id="gtBatt">--</b></div>'
+    + '\n        <div class="gt-row turnrow" id="gtTurnRow" hidden><span class="label">Virage</span><span><b id="gtTurn">--</b><span class="st" id="gtTurnSt"></span></span></div>');
+}
 // nouveau panneau du banc de puissance
 {
   const a = outHtml.indexOf('<div class="dyno" id="dynoBox">'), b = outHtml.indexOf('<div class="panel records">', a);

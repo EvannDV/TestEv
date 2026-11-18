@@ -141,6 +141,26 @@ if (window.Android && window.Android.ble) {
   } catch (e) { console.error('Bluetooth : ' + e.message); }
 }
 
+/* ---------- GPS : lu par Android directement (la géolocalisation du WebView échoue souvent ici) ---------- */
+if (window.Android && window.Android.gpsStart) {
+  const watchers = {}; let wid = 0, last = null;
+  window.__gpsFix = (lat, lon, acc, spd, hdg, t) => {
+    last = { coords: { latitude: lat, longitude: lon, accuracy: acc, speed: spd, heading: hdg, altitude: null, altitudeAccuracy: null }, timestamp: t };
+    Object.keys(watchers).forEach(k => { try { watchers[k].ok(last); } catch (e) { console.error(e); } });
+  };
+  window.__gpsErr = (code, msg) => Object.keys(watchers).forEach(k => { const w = watchers[k]; if (w.err) try { w.err({ code, message: msg, PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 }); } catch (e) { console.error(e); } });
+  window.__gpsSats = (seen, used) => { // pendant la recherche, la carte dit combien de satellites sont captés
+    const m = document.getElementById('mapMsg');
+    if (m && !m.hidden && /Recherche du signal GPS/.test(m.textContent)) m.textContent = `Recherche du signal GPS… ${used} satellite${used > 1 ? 's' : ''} utilisé${used > 1 ? 's' : ''} sur ${seen} vu${seen > 1 ? 's' : ''}`;
+  };
+  const geo = {
+    watchPosition(ok, err) { const id = ++wid; watchers[id] = { ok, err }; window.Android.gpsStart(); if (last) setTimeout(() => watchers[id] && ok(last), 0); return id; },
+    clearWatch(id) { delete watchers[id]; if (!Object.keys(watchers).length) window.Android.gpsStop(); },
+    getCurrentPosition(ok, err) { const id = geo.watchPosition(p => { geo.clearWatch(id); ok(p); }, e => { geo.clearWatch(id); if (err) err(e); }); }
+  };
+  try { Object.defineProperty(navigator, 'geolocation', { configurable: true, value: geo }); } catch (e) { console.error('GPS : ' + e.message); }
+}
+
 /* ---------- menu Android : appui long sur « J.A.R.V.I.S » en haut à gauche ---------- */
 if (window.Android && window.Android.menu) addEventListener('DOMContentLoaded', () => {
   const el = document.querySelector('.top .brand'); if (!el) return;

@@ -151,6 +151,20 @@ masse (passagers, carburant), pertes réelles de transmission.
   Pendant la mesure seul un trait HTML (curseur) bouge : la toile n'est redessinée qu'à la fin.
 Coût par image inchangé (environ 10 ms sur la page Conduite, processeur ralenti 6×).
 
+## GPS natif, sans musique, petit écran (v3.3, 18 nov. 2026)
+
+- **GPS** : l'utilisateur n'avait pas de position. La géolocalisation du WebView est
+  remplacée par `GpsBridge.java` (LocationManager GPS + réseau, dernière position connue,
+  `GnssCb` pour le nombre de satellites, `GpsListener`). `shim.js` fournit
+  `navigator.geolocation` (`__gpsFix`, `__gpsErr`, `__gpsSats`) ; pendant la recherche, la
+  carte affiche « n satellites utilisés sur m vus ». Localisation éteinte : message + ouverture
+  des réglages (une fois). Diagnostic : ligne GPS (permission, fournisseurs, satellites,
+  âge et précision de la dernière position). Jamais testé sur l'autoradio.
+- **Musique retirée** de la console et de la page Nav (carte pleine largeur).
+- **Petit écran** : textes et chiffres agrandis partout (fin de `theme.css`), heure des messages
+  masquée. Page Conduite : la mini-carte est remplacée par 5 grandes infos (conso, autonomie,
+  huile · eau, turbo, batterie) + le prochain virage pendant un itinéraire.
+
 ## Mises à jour intégrées (v2.1)
 
 `Updater.java` lit `version.json` (généré par `android/build.sh` à partir de `VERSION_CODE` /
@@ -173,7 +187,7 @@ reconnaissance sur l'autoradio. Le Diagnostic affiche les lignes VOIX et MICRO.
 1. Fait : v3.0 = interface Giulietta + OBD Bluetooth + carte Esri/OSM + voix et micro Android
    + mises à jour intégrées. Le CAN est retiré de l'appli.
 2. v3.0 confirmée par l'utilisateur sur l'autoradio (« ça marche »).
-3. **En attente de l'utilisateur** : essai de la v3.2 (nouveau design, banc réel, fluidité).
+3. **En attente de l'utilisateur** : essai de la v3.3 (GPS, lisibilité) et du banc réel.
 
 ## Règles
 

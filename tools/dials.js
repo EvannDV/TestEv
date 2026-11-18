@@ -47,4 +47,9 @@ function gtUpdate(s) {
   $('gtCons').innerHTML = $('cons').innerHTML;
   $('gtRange').innerHTML = $('range').innerHTML;
   $('gtTemp').textContent = s.oil == null || s.coolant == null ? 'NONE' : `${fr(s.oil)}° · ${fr(s.coolant)}°`;
+  $('gtBoost').innerHTML = s.boost == null ? 'NONE' : `${fr(s.boost, 2)}<small>bar</small>`;
+  $('gtBatt').innerHTML = s.batt == null ? 'NONE' : `${fr(s.batt, 1)}<small>V</small>`;
+  const tr = $('gtTurnRow'), on = !!nav.route; // prochain virage, seulement pendant un itinéraire
+  if (tr.hidden === on) tr.hidden = !on;
+  if (on) { $('gtTurn').textContent = $('turnDist').textContent; $('gtTurnSt').textContent = $('turnStreet').textContent; }
 }

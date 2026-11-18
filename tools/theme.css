@@ -139,3 +139,81 @@
 .dy-hist i{font-style:normal;font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line-hi);color:#a9bccb}
 .dy-hist i.cur{border-color:var(--acc);color:var(--acc)}
 .dy-empty{font-size:14px;color:var(--muted);line-height:1.4}
+
+/* ============================================================
+   SANS MUSIQUE + LISIBILITÉ SUR PETIT ÉCRAN (v3.3)
+   ============================================================ */
+.jarvis .music,.navp .player{display:none!important}
+.navp{grid-template-columns:1fr!important}
+.jarvis{grid-template-columns:60px minmax(0,1.55fr) minmax(0,1fr)!important;padding:10px 16px}
+
+/* textes plus grands partout */
+.label{font-size:12px;letter-spacing:.12em}
+.note{font-size:14px}
+:root[data-dna="N"] .brand-name{letter-spacing:.24em;font-size:19px}
+:root[data-dna="N"] .tab{font-size:15px;padding:7px 12px;letter-spacing:.06em}
+.badge{font-size:11px;padding:5px 9px}
+.clock .time{font-size:23px}
+:root[data-dna="N"] .icon-btn{height:38px;min-width:38px}
+:root[data-dna="N"] .btn{font-size:12.5px;padding:9px 13px}
+
+/* console Jarvis : messages plus grands, sans l'heure */
+.log{height:96px;font-size:17.5px;line-height:1.32}
+.msg{display:block}
+.msg time{display:none}
+#q{font-size:17px;padding:11px 12px}
+.mic{width:50px}
+.quick .btn{font-size:12px;padding:8px 11px}
+
+/* conduite */
+.gt-big{font-size:100px}
+.gt-big.none{font-size:38px}
+.gt-unit{font-size:14px}
+.gt-sub{font-size:25px}
+.gt-num{font-size:22px}
+.gt-row{padding:11px 0}
+.gt-row .label{font-size:13px}
+.gt-row b{font-size:28px}
+.gt-row b small{font-size:14px}
+:root[data-dna="N"] .turn b{font-size:28px}
+:root[data-dna="N"] .turn span{font-size:16px}
+
+/* moteur */
+.srow{padding:8px 0}
+.srow > span:first-child{font-size:17px}
+.srow b{font-size:23px}
+.srow b small{font-size:13px}
+.srange{font-size:11.5px}
+.state{font-size:11px}
+
+/* perf, garage */
+.stat b{font-size:25px}
+.seg-ctrl button{font-size:16px;padding:8px 16px}
+.dy-state{font-size:15.5px}
+.dy-steps li{font-size:15.5px}
+.dy-cond{font-size:14px}
+.dy-cond dt{font-size:11px}
+.dy-legend{font-size:11.5px}
+
+/* page Conduite : plus de mini-carte, cinq grandes infos au centre (la carte reste en page Nav) */
+:root[data-dna="N"] .drive{grid-template-rows:minmax(0,1fr);grid-template-areas:"rpm info spd"}
+:root[data-dna="N"] .drive > .mapp{display:none}
+:root[data-dna="N"] .gt-info{display:flex;flex-direction:column;justify-content:space-around;padding:6px 18px}
+.gt-row{padding:6px 0}
+.gt-row b{font-size:27px}
+.gt-row.turnrow b{font-size:22px;color:var(--acc)}
+.gt-row.turnrow span.st{display:block;font-size:14px;color:var(--muted);text-align:right;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* en-tête sur une ligne */
+:root[data-dna="N"] .icon-btn{white-space:nowrap}
+:root[data-dna="N"] .tab{padding:7px 10px}
+.clock .time{font-size:22px}
+/* banc : colonne de droite plus compacte */
+.dy-side{gap:6px}
+.dy-big b{font-size:30px}
+.dy-big > div{padding:6px 10px}
+.dy-verdict{padding:5px 10px}
+.dy-verdict b{font-size:20px}
+.dy-verdict span{font-size:13px}
+.dy-cmp{font-size:13px}
+.dy-cond{gap:3px 10px;font-size:13.5px}
+.dy-hist i{font-size:11px;padding:2px 7px}

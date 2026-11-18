@@ -114,7 +114,7 @@ function renderDyno() {
   $('dyCond').innerHTML =
     row('Rapport', (d.gear || '?') + 'e') + row('Plage', d.from ? `${(Math.round(d.from / 100) * 100).toLocaleString('fr-FR')}–${(Math.round(d.to / 100) * 100).toLocaleString('fr-FR')}` : '--') +
     row('Air', d.ext != null ? d.ext + ' °C' : '--') + row('Mesures', d.pts || '--') +
-    row('Compteur', d.gps ? `calé GPS (${d.gps > 1 ? '+' : '−'}${fr(Math.abs(d.gps - 1) * 100, 1)} %)` : 'non calé', d.gps ? 'good' : 'warn') +
+    row('Compteur', d.gps ? `calé GPS` : 'non calé', d.gps ? 'good' : 'warn') +
     row('Fiabilité', rel ? rel[0] : '--', rel ? rel[1] : '');
   $('dyHist').innerHTML = dyno.hist.slice(0, 6).map((x, i) => `<i class="${i === 0 ? 'cur' : ''}">${dyFmtDate(x.d)} · ${x.ch} ch</i>`).join('');
 }

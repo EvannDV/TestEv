@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     private SpeechRecognizer sr;
     private int pendingListen;
     final BleBridge ble = new BleBridge(this);
+    final GpsBridge gps = new GpsBridge(this);
     private final JarvisChromeClient chrome = new JarvisChromeClient();
     private final Updater updater = new Updater(this);
     private final Handler timer = new Handler(Looper.getMainLooper());
@@ -90,6 +91,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] results) {
+        if (code == 3) { gps.onPermission(results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED); return; }
         if (code == 2) { // micro
             if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) listen(pendingListen);
             else { toast("Jarvis a besoin du micro pour vous entendre."); srEvent(pendingListen, "error", "not-allowed"); srEvent(pendingListen, "end", ""); }
@@ -130,6 +132,7 @@ public class MainActivity extends Activity {
         try {
             sb.append("WEBVIEW: ").append(WebSettings.getDefaultUserAgent(this)).append("\n\n");
         } catch (Throwable t) { sb.append("WEBVIEW: ").append(t).append("\n\n"); }
+        sb.append("GPS: ").append(gps.describe()).append("\n");
         sb.append("VOIX: ").append(ttsInfo).append("\nMICRO: reconnaissance vocale ")
                 .append(SpeechRecognizer.isRecognitionAvailable(this) ? "disponible" : "ABSENTE").append("\n\n");
         sb.append("ERREURS JS: ").append(chrome.errors.length() == 0 ? "aucune" : "\n" + chrome.errors).append("\n\n");
@@ -274,6 +277,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         timer.removeCallbacksAndMessages(null);
         ble.closeAll();
+        gps.stop();
         if (sr != null) sr.destroy();
         if (tts != null) tts.shutdown();
         web.destroy();

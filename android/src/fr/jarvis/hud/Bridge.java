@@ -21,6 +21,12 @@ final class Bridge {
     public void ble(String method, int id, String args) { app.ble.call(method, id, args); }
 
     @JavascriptInterface
+    public void gpsStart() { app.gps.start(); }
+
+    @JavascriptInterface
+    public void gpsStop() { app.gps.stop(); }
+
+    @JavascriptInterface
     public void listen(int id) { app.listen(id); }
 
     @JavascriptInterface
